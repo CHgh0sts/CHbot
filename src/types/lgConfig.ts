@@ -1,0 +1,20 @@
+export interface LgConfigOptions {
+  minPlayers: number | null;
+  wolfCount: number | null;
+  loupsAuto: boolean | null;
+  includeSeer: boolean | null;
+  includeWitch: boolean | null;
+  includeHunter: boolean | null;
+  includeCupid: boolean | null;
+  includeGuard: boolean | null;
+  includeThief: boolean | null;
+  includeAngel: boolean | null;
+  includeLittleGirl: boolean | null;
+  revealDeadRoles: boolean | null;
+  darkNightMode: boolean | null;
+  gossipSeerMode: boolean | null;
+  tripleLoversMode: boolean | null;
+  announceNightProtection: boolean | null;
+  villageois: number | null;
+  villageoisAuto: boolean | null;
+}

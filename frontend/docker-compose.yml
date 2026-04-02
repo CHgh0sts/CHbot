@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: botwolf
+      POSTGRES_PASSWORD: botwolf
+      POSTGRES_DB: botwolf
+    ports:
+      - "5432:5432"
+    volumes:
+      - botwolf_pg:/var/lib/postgresql/data
+
+volumes:
+  botwolf_pg:

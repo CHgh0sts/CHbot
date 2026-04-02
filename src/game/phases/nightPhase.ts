@@ -1,0 +1,1033 @@
+import { randomInt } from 'node:crypto';
+import type {
+  AttachmentBuilder,
+  Client,
+  GuildTextBasedChannel,
+} from 'discord.js';
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  StringSelectMenuBuilder,
+} from 'discord.js';
+import { createWaiter, fulfillPending } from '../../interaction/pending';
+import { NIGHT_ACTION_MS } from '../../config';
+import { Role } from '../../types';
+import type { GameSession } from '../GameSession';
+import {
+  roleLabelFr,
+  rolePowerBlurb,
+  shouldRevealDeadRoles,
+} from '../composition';
+import { embedWithRoleCardThumbnail } from '../roleCards';
+import {
+  demotePlayersToStageAudience,
+  serverMuteAllOnGameStage,
+} from '../../services/StageVoiceService';
+import { roleCardSource } from '../../utils/roleCardRemoteUrl';
+import {
+  buildAlivePlayerSelect,
+  publicEmbed,
+} from '../../services/MessagingService';
+import { formatDeathAnnounces } from '../deathAnnounce';
+import { presentGameOverPanel } from '../../services/PostGameService';
+import { deliverRoleToPlayer } from '../../services/RoleDeliveryService';
+import {
+  ensureWolfPackThread,
+  sendComponentsToPlayerThread,
+  sendInPlayerSecretThread,
+  syncWolfPackMembership,
+} from '../../services/SecretThreadService';
+import { runCupidPhase } from '../cupid';
+import { expandDeathsWithHunterAndLovers } from '../deathChain';
+import {
+  sendDawnApproaching,
+  sendMeuteBeat,
+  sendNightBeat,
+  sendNightPrologue,
+} from '../nightNarration';
+import { startDayPhase } from './dayPhase';
+
+function seerKey(channelId: string, seerId: string): string {
+  return `${channelId}:seer:${seerId}`;
+}
+
+function thiefKey(channelId: string, thiefId: string): string {
+  return `${channelId}:thief:${thiefId}`;
+}
+
+function guardKey(channelId: string, guardId: string): string {
+  return `${channelId}:guard:${guardId}`;
+}
+
+function angelKey(channelId: string, angelId: string): string {
+  return `${channelId}:angel:${angelId}`;
+}
+
+export function littleGirlSpyKey(channelId: string): string {
+  return `${channelId}:littlegirl:spy`;
+}
+
+function swapPlayerRoles(session: GameSession, a: string, b: string): void {
+  const pa = session.getPlayer(a);
+  const pb = session.getPlayer(b);
+  if (!pa || !pb) return;
+  const tmp = pa.role;
+  pa.role = pb.role;
+  pb.role = tmp;
+}
+
+export async function runThiefPhase(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  if (session.nightNumber !== 1 || session.thiefNightDone) return;
+
+  const thiefId = session.thiefId();
+  if (!thiefId) {
+    session.thiefNightDone = true;
+    return;
+  }
+
+  const targets = session.aliveIds().filter((id) => id !== thiefId);
+  if (targets.length === 0) {
+    session.thiefNightDone = true;
+    return;
+  }
+
+  session.nightSubPhase = 'thief';
+
+  const embed = new EmbedBuilder()
+    .setTitle('Voleur — 1re nuit')
+    .setDescription(
+      'Choisis **un autre joueur vivant** : vous **échangez vos cartes** (rôles). Vous serez prévenus chacun dans votre fil privé.'
+    )
+    .setColor(0x95a5a6);
+
+  const menu = buildAlivePlayerSelect(
+    `lg:${session.textChannelId}:thief:${thiefId}`,
+    'Échanger avec…',
+    targets,
+    session.labelMap(),
+    new Set([thiefId])
+  );
+
+  const ok = await sendComponentsToPlayerThread(
+        client,
+        session,
+    thiefId,
+    embed,
+    [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)]
+  );
+
+  if (!ok) {
+    await textChannel.send({
+      content:
+        '**Voleur** : impossible d’envoyer l’action dans le fil prévu — échange ignoré.',
+    });
+    session.thiefNightDone = true;
+    return;
+  }
+
+  const picked = await createWaiter(
+    thiefKey(session.textChannelId, thiefId),
+    NIGHT_ACTION_MS
+  );
+  if (!picked) {
+    await textChannel.send({
+      content: '**Voleur** : temps écoulé — **aucun** échange.',
+    });
+    session.thiefNightDone = true;
+    return;
+  }
+
+  swapPlayerRoles(session, thiefId, picked);
+  await syncWolfPackMembership(client, session);
+
+  for (const uid of [thiefId, picked]) {
+    const p = session.getPlayer(uid);
+    if (!p) continue;
+    const roleEmbed = new EmbedBuilder()
+      .setTitle('Nouveau rôle')
+      .setDescription(
+        `Tu es **${roleLabelFr(p.role)}**.\n\n${rolePowerBlurb(p.role)}`
+      )
+      .setColor(0x2b2d31);
+    await deliverRoleToPlayer(
+      client,
+      session,
+      uid,
+      p.displayName,
+      roleEmbed,
+      p.role
+    );
+  }
+
+  session.thiefNightDone = true;
+}
+
+export async function runGuardPhase(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  const guardId = session.guardId();
+  if (!guardId) return;
+
+  session.nightSubPhase = 'guard';
+
+  const exclude = new Set<string>([guardId]);
+  if (session.guardLastProtectedId) {
+    exclude.add(session.guardLastProtectedId);
+  }
+
+  const targets = session.aliveIds().filter((id) => !exclude.has(id));
+  if (targets.length === 0) {
+    await textChannel.send({
+      content:
+        '**Garde** : aucune cible valide (tous exclus) — protection impossible ce soir.',
+    });
+    return;
+  }
+
+  const embed = new EmbedBuilder()
+    .setTitle('Garde — Nuit')
+    .setDescription(
+      'Choisis un joueur à **protéger** des **loups** cette nuit (pas toi-même, ni ta dernière protection réussie).'
+    )
+    .setColor(0x3498db);
+
+  const menu = buildAlivePlayerSelect(
+    `lg:${session.textChannelId}:guard:${guardId}`,
+    'Protéger…',
+    targets,
+    session.labelMap(),
+    new Set()
+  );
+
+  const ok = await sendComponentsToPlayerThread(
+        client,
+        session,
+    guardId,
+    embed,
+    [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)]
+  );
+
+  if (!ok) {
+    await textChannel.send({
+      content:
+        '**Garde** : impossible d’envoyer l’action dans le fil prévu — tour ignoré.',
+    });
+    return;
+  }
+
+  const picked = await createWaiter(
+    guardKey(session.textChannelId, guardId),
+    NIGHT_ACTION_MS
+  );
+  if (!picked) {
+    await textChannel.send({
+      content: '**Garde** : temps écoulé — **personne** n’est protégé ce soir.',
+    });
+    return;
+  }
+
+  session.guardProtectedUserId = picked;
+  await sendInPlayerSecretThread(client, session, guardId, {
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Protection')
+        .setDescription(
+          `Tu protèges **${session.getPlayer(picked)?.displayName ?? 'ce joueur'}** cette nuit.`
+        )
+        .setColor(0x3498db),
+    ],
+  });
+
+  if (session.compositionConfig.announceNightProtection) {
+    await textChannel.send({
+      embeds: [
+        publicEmbed(
+          'Nuit — protection',
+          'Quelqu’un a passé la nuit **à l’abri des griffes des loups** (pouvoir de protection actif).'
+        ).setColor(0x3498db),
+      ],
+    });
+  }
+}
+
+export async function runAngelPhase(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  if (session.nightNumber !== 1) return;
+  const angelId = session.angelId();
+  if (!angelId) return;
+
+  session.nightSubPhase = 'angel';
+
+  const targets = session.aliveIds().filter((id) => id !== angelId);
+  if (targets.length === 0) {
+    await textChannel.send({
+      content: '**Ange** : aucune cible pour la bénédiction.',
+    });
+    return;
+  }
+
+  const embed = new EmbedBuilder()
+    .setTitle('Ange — 1re nuit')
+    .setDescription(
+      'Choisis un joueur vivant (**autre que toi**) à **bénir** : tant qu’il est en vie, il **ne peut pas être tué par le vote des loups** (sorcière, vote du village, chagrin, chasseur, etc. restent possibles).'
+    )
+    .setColor(0xe8daef);
+
+  const menu = buildAlivePlayerSelect(
+    `lg:${session.textChannelId}:angel:${angelId}`,
+    'Bénir…',
+    targets,
+    session.labelMap(),
+    new Set()
+  );
+
+  const ok = await sendComponentsToPlayerThread(
+        client,
+        session,
+    angelId,
+    embed,
+    [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)]
+  );
+
+  if (!ok) {
+    await textChannel.send({
+      content: '**Ange** : impossible d’envoyer l’action — bénédiction ignorée.',
+    });
+    return;
+  }
+
+  const picked = await createWaiter(
+    angelKey(session.textChannelId, angelId),
+    NIGHT_ACTION_MS
+  );
+  if (!picked) {
+    await textChannel.send({
+      content: '**Ange** : temps écoulé — **aucune** bénédiction.',
+    });
+    return;
+  }
+
+  session.angelProtectedUserId = picked;
+  await sendInPlayerSecretThread(client, session, angelId, {
+    embeds: [
+      new EmbedBuilder()
+        .setTitle('Bénédiction')
+        .setDescription(
+          `**${session.getPlayer(picked)?.displayName ?? '?'}** est protégé·e contre les **loups**.`
+        )
+        .setColor(0xe8daef),
+    ],
+  });
+
+  const blessed = session.getPlayer(picked);
+  if (blessed) {
+    await sendInPlayerSecretThread(client, session, picked, {
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Une présence protectrice')
+          .setDescription(
+            '_Tu sens une **lueur** — les **griffes des loups** ne pourront pas t’atteindre tant que tu es en vie._'
+          )
+          .setColor(0xe8daef),
+      ],
+    });
+  }
+
+  if (session.compositionConfig.announceNightProtection) {
+    await textChannel.send({
+      embeds: [
+        publicEmbed(
+          'Nuit — bénédiction',
+          'Une **lueur bienveillante** semble veiller sur quelqu’un dans le village…'
+        ).setColor(0xe8daef),
+      ],
+    });
+  }
+}
+
+function witchSaveKey(channelId: string): string {
+  return `${channelId}:witch:save`;
+}
+
+function witchKillKey(channelId: string): string {
+  return `${channelId}:witch:kill`;
+}
+
+export async function runSeerPhase(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  const seerId = session.seerId();
+  if (!seerId) return;
+
+  session.nightSubPhase = 'seer';
+  const targets = session.aliveIds().filter((id) => id !== seerId);
+  if (targets.length === 0) return;
+
+  const gossip = session.compositionConfig.gossipSeerMode;
+  const embed = new EmbedBuilder()
+    .setTitle('Voyante — Nuit')
+    .setDescription(
+      gossip
+        ? 'Choisis un joueur **vivant** à observer. **Voyante bavarde** : tu vois son **rôle exact** ici (confidentiel). Dans le salon, un **rôle** ne s’affiche **que** dans les **annonces de mort** (lever du soleil, vote, chagrin, etc.), jamais pour un **vivant**.'
+        : 'Choisis un joueur **vivant** à observer. Tu verras s’il appartient aux **Loups-Garous**.'
+    )
+    .setColor(0x9b59b6);
+
+  const menu = buildAlivePlayerSelect(
+    `lg:${session.textChannelId}:seer`,
+    'Observer…',
+    targets,
+    session.labelMap(),
+    new Set([seerId])
+  );
+
+  const ok = await sendComponentsToPlayerThread(
+        client,
+        session,
+    seerId,
+    embed,
+    [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)]
+  );
+
+  if (!ok) {
+    await textChannel.send({
+      content:
+        '**Voyante** : impossible d’envoyer l’action dans le fil prévu — tour ignoré.',
+    });
+    return;
+  }
+
+  const picked = await createWaiter(seerKey(session.textChannelId, seerId), NIGHT_ACTION_MS);
+  if (!picked) {
+    await textChannel.send({
+      content: '**Voyante** : aucune observation (temps écoulé).',
+    });
+    return;
+  }
+
+  const target = session.getPlayer(picked);
+  if (!target) return;
+
+  if (gossip) {
+    session.gossipSeerNightTargetId = picked;
+    await sendInPlayerSecretThread(client, session, seerId, {
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Observation enregistrée')
+          .setDescription(
+            `Cible : **${target.displayName}** — rôle : **${roleLabelFr(target.role)}**.\n\n_Resté **confidentiel** tant que cette personne est **vivante** ; si elle meurt, son rôle pourra apparaître **uniquement** dans le message d’**annonce de mort**, selon la config (nuit sombre / révélation des morts)._`
+          )
+          .setColor(0x9b59b6),
+      ],
+    });
+  } else {
+    const isWolf = target.role === Role.Werewolf;
+    await sendInPlayerSecretThread(client, session, seerId, {
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Résultat')
+          .setDescription(
+            isWolf
+              ? `**${target.displayName}** est un **Loup-Garou**.`
+              : `**${target.displayName}** n’est **pas** un Loup-Garou.`
+          )
+          .setColor(isWolf ? 0xed4245 : 0x57f287),
+      ],
+    });
+  }
+}
+
+async function announceGossipSeerAtDawn(
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  if (!session.compositionConfig.gossipSeerMode) return;
+  const tid = session.gossipSeerNightTargetId;
+  if (!tid) return;
+  const observed = session.getPlayer(tid);
+  session.gossipSeerNightTargetId = null;
+  if (!observed) return;
+  // Rôle public uniquement dans les annonces de morts : pas de double annonce si la cible est déjà dans le lever du soleil.
+  if (!observed.alive) return;
+  await textChannel.send({
+    embeds: [
+      publicEmbed(
+        'Voyante bavarde',
+        'La **Voyante bavarde** a mené son enquête pendant la nuit. Le **rôle exact** d’un joueur **encore vivant** ne s’affiche pas ici : **uniquement** dans une **annonce de mort** le cas échéant.'
+      ).setColor(0x9b59b6),
+    ],
+  });
+}
+
+function wolfAllVoted(session: GameSession): boolean {
+  const wolves = session.wolfIds();
+  if (wolves.length === 0) return true;
+  return wolves.every((w) => session.wolfVotesByWolf.has(w));
+}
+
+export function buildWolfVoteBoardContent(session: GameSession): string {
+  const targets = session
+    .aliveIds()
+    .filter((id) => !session.wolfIds().includes(id));
+  const tally = new Map<string, number>();
+  for (const tid of session.wolfVotesByWolf.values()) {
+    tally.set(tid, (tally.get(tid) ?? 0) + 1);
+  }
+
+  const lines =
+    targets.length === 0
+      ? '_(aucune cible)_'
+      : targets
+          .map((id) => {
+            const n = tally.get(id) ?? 0;
+            const name = session.getPlayer(id)?.displayName ?? id;
+            return `• **${name}** : ${n} vote(s)`;
+          })
+          .join('\n');
+
+  const wolves = session.wolfIds();
+  const voted = wolves.filter((w) => session.wolfVotesByWolf.has(w)).length;
+  const secLeft = Math.max(
+    0,
+    Math.ceil((session.wolfVoteDeadlineAt - Date.now()) / 1000)
+  );
+
+  const detail = [...session.wolfVotesByWolf.entries()]
+    .map(([w, t]) => {
+      const wn = session.getPlayer(w)?.displayName ?? w;
+      const tn = session.getPlayer(t)?.displayName ?? t;
+      return `${wn} → ${tn}`;
+    })
+    .join(' · ');
+
+  return (
+    `**Votes loups** — Nuit ${session.nightNumber}\n` +
+    `⏱️ ~${secLeft}s max · **${voted}/${wolves.length}** loups ont voté\n\n` +
+    `**Comptage par cible :**\n${lines}\n\n` +
+    (detail ? `**Détail :** ${detail}\n\n` : '') +
+    `Utilise \`/lg-vote\` avec l’option **cible** (pseudo ou \`<@mention>\`).\n` +
+    `**Loups :** ${wolves.map((id) => `<@${id}>`).join(' ')}`
+  );
+}
+
+export async function refreshWolfVoteBoard(
+  client: Client,
+  session: GameSession
+): Promise<void> {
+  if (!session.wolfPackThreadId || !session.wolfVoteBoardMessageId) return;
+  const pack = await client.channels
+    .fetch(session.wolfPackThreadId)
+    .catch(() => null);
+  if (!pack?.isThread()) return;
+  const msg = await pack.messages
+    .fetch(session.wolfVoteBoardMessageId)
+    .catch(() => null);
+  if (!msg?.editable) return;
+  await msg.edit({ content: buildWolfVoteBoardContent(session) });
+}
+
+export async function runWolfPhase(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  const wolves = session.wolfIds();
+  if (wolves.length === 0) return;
+
+  session.nightSubPhase = 'wolves';
+  session.wolfVotesByWolf.clear();
+  session.wolfVoteBoardMessageId = null;
+
+  const targets = session
+    .aliveIds()
+    .filter((id) => !session.wolfIds().includes(id));
+  if (targets.length === 0) {
+    await textChannel.send({
+      content: '**Loups** : aucune cible (tous loups ?).',
+    });
+    return;
+  }
+
+  const pack = await ensureWolfPackThread(client, session);
+  if (!pack) {
+    await textChannel.send({
+      content:
+        '**Loups** : impossible de créer le fil **Meute** — vérifie les fils privés sur le serveur.',
+    });
+    return;
+  }
+
+  await sendMeuteBeat(textChannel, session);
+
+  session.wolfVoteDeadlineAt = Date.now() + NIGHT_ACTION_MS;
+  const boardMsg = await pack.send({
+    content: buildWolfVoteBoardContent(session),
+  });
+  session.wolfVoteBoardMessageId = boardMsg.id;
+
+  const spyK = littleGirlSpyKey(session.textChannelId);
+  let lgSpyPromise: Promise<string | null> = Promise.resolve(null);
+  const lgUid = session.littleGirlId();
+  if (lgUid && session.getPlayer(lgUid)?.alive) {
+    lgSpyPromise = createWaiter(spyK, NIGHT_ACTION_MS);
+    const spyEmbed = new EmbedBuilder()
+      .setTitle('Petite fille')
+      .setDescription(
+        'Les **loups** délibèrent. Veux-tu **espionner** la meute ?\n\n' +
+          '• **Espionner** : tu apprendras leur **cible majoritaire** ; **50 %** de risque d’être **repérée** — tu mourrais **à la place** de cette personne (épargnée par les loups ce soir).\n' +
+          '• **Ne pas regarder** : aucun risque, aucune info.'
+      )
+      .setColor(0xf5b7b1);
+    const spyRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`lg:${session.textChannelId}:littlegirl:yes`)
+        .setLabel('Espionner')
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId(`lg:${session.textChannelId}:littlegirl:no`)
+        .setLabel('Ne pas regarder')
+        .setStyle(ButtonStyle.Secondary)
+    );
+    const okSpy = await sendInPlayerSecretThread(
+      client,
+      session,
+      lgUid,
+      {
+        content: `<@${lgUid}> **Petite fille** — choix pour la nuit **${session.nightNumber}**.`,
+        embeds: [spyEmbed],
+        components: [spyRow],
+      }
+    );
+    if (!okSpy) {
+      fulfillPending(spyK, 'no');
+    }
+  }
+
+  const deadline = Date.now() + NIGHT_ACTION_MS;
+  const tick = setInterval(() => {
+    refreshWolfVoteBoard(client, session).catch(() => undefined);
+  }, 8000);
+
+  try {
+    while (Date.now() < deadline) {
+      if (wolfAllVoted(session)) break;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  } finally {
+    clearInterval(tick);
+  }
+
+  await refreshWolfVoteBoard(client, session).catch(() => undefined);
+
+  const tally = new Map<string, number>();
+  for (const t of session.wolfVotesByWolf.values()) {
+    tally.set(t, (tally.get(t) ?? 0) + 1);
+  }
+
+  const maxScore = tally.size ? Math.max(...tally.values()) : 0;
+  const winners = [...tally.entries()]
+    .filter(([, s]) => s === maxScore)
+    .map(([t]) => t);
+  const rawBest =
+    winners.length === 1 && maxScore > 0 ? (winners[0] ?? null) : null;
+
+  session.wolfVoteBoardMessageId = null;
+  session.wolfVotesByWolf.clear();
+  session.wolfVoteDeadlineAt = 0;
+
+  if (!rawBest) {
+    session.wolfTargetId = null;
+    await textChannel.send({
+      content:
+        '**Loups** : égalité ou votes manquants — **aucune victime** ce soir.',
+    });
+  } else {
+    let wolfTarget: string | null = rawBest;
+    if (wolfTarget === session.guardProtectedUserId) {
+      wolfTarget = null;
+    }
+    if (wolfTarget === session.angelProtectedUserId) {
+      wolfTarget = null;
+    }
+    session.wolfTargetId = wolfTarget;
+  }
+
+  const spyChoice = await lgSpyPromise;
+  if (
+    lgUid &&
+    session.getPlayer(lgUid)?.alive &&
+    spyChoice === 'yes'
+  ) {
+    const caught = randomInt(1, 101) <= 50;
+    if (caught) {
+      session.pendingNightDeaths.push(lgUid);
+      session.wolfTargetId = null;
+      await sendInPlayerSecretThread(client, session, lgUid, {
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('Repérée !')
+            .setDescription(
+              'Les loups t’ont **vue**. Tu meurs **à la place** de leur victime désignée — elle est **épargnée** par la meute ce soir (sauf autres effets : sorcière, etc.).'
+            )
+            .setColor(0xed4245),
+        ],
+      });
+    } else {
+      const desc =
+        rawBest != null
+          ? `Tu observes sans être vue : la meute a majoritairement désigné **${session.getPlayer(rawBest)?.displayName ?? '?'}**.`
+          : `Tu observes : les loups n’ont **pas** de cible unique claire ce soir.`;
+      await sendInPlayerSecretThread(client, session, lgUid, {
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('Espionnage')
+            .setDescription(
+              `${desc}\n\n_La nuit continue (protections, sorcière…)._`
+            )
+            .setColor(0x9b59b6),
+        ],
+      });
+    }
+  }
+}
+
+export async function runWitchPhase(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  const witchId = session.witchId();
+  if (!witchId) return;
+
+  session.nightSubPhase = 'witch';
+
+  let wolfVictimName = 'personne';
+  if (session.wolfTargetId) {
+    wolfVictimName =
+      session.getPlayer(session.wolfTargetId)?.displayName ?? 'un joueur';
+  }
+
+  if (session.witchLifePotion && session.wolfTargetId) {
+    const embed = new EmbedBuilder()
+      .setTitle('Sorcière — potion de vie')
+      .setDescription(
+        `Les loups visent **${wolfVictimName}**. Utiliser la **potion de vie** ?`
+      )
+      .setColor(0x2ecc71);
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`lg:${session.textChannelId}:witch:save:yes`)
+        .setLabel('Sauver')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`lg:${session.textChannelId}:witch:save:no`)
+        .setLabel('Ne pas sauver')
+        .setStyle(ButtonStyle.Secondary)
+    );
+
+    const ok = await sendInPlayerSecretThread(client, session, witchId, {
+      embeds: [embed],
+      components: [row],
+    });
+
+    if (!ok) {
+      await textChannel.send({
+        content: `**Sorcière** : impossible d’envoyer dans le fil — potion de vie non utilisée.`,
+      });
+    } else {
+      const saveChoice = await createWaiter(
+        witchSaveKey(session.textChannelId),
+        NIGHT_ACTION_MS
+      );
+      if (saveChoice === 'yes') {
+        session.witchLifePotion = false;
+        session.wolfTargetId = null;
+      }
+    }
+  }
+
+  if (!session.witchDeathPotion) return;
+
+  const alive = session.aliveIds();
+  if (alive.length <= 1) return;
+
+  const embed = new EmbedBuilder()
+    .setTitle('Sorcière — potion de mort')
+    .setDescription(
+      'Tu peux empoisonner **un joueur vivant**, ou passer ton tour.'
+    )
+    .setColor(0x992d22);
+
+  const menu = buildAlivePlayerSelect(
+    `lg:${session.textChannelId}:witch:kill`,
+    'Empoisonner…',
+    alive,
+    session.labelMap(),
+    new Set()
+  );
+
+  const rowSkip = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`lg:${session.textChannelId}:witch:skip`)
+      .setLabel('Ne pas utiliser')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const ok2 = await sendInPlayerSecretThread(client, session, witchId, {
+    embeds: [embed],
+    components: [
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu),
+      rowSkip,
+    ],
+  });
+
+  if (!ok2) {
+    await textChannel.send({
+      content: `**Sorcière** : impossible d’envoyer dans le fil — potion de mort non utilisée.`,
+    });
+    return;
+  }
+
+  const killChoice = await createWaiter(
+    witchKillKey(session.textChannelId),
+    NIGHT_ACTION_MS
+  );
+  if (killChoice && killChoice !== 'skip') {
+    session.witchDeathPotion = false;
+    session.pendingNightDeaths.push(killChoice);
+  }
+}
+
+export async function resolveNightDeaths(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  const deaths: string[] = [];
+  if (session.wolfTargetId) deaths.push(session.wolfTargetId);
+  deaths.push(...session.pendingNightDeaths);
+  const unique = [...new Set(deaths)];
+
+  const finalIds = await expandDeathsWithHunterAndLovers(
+    client,
+    session,
+    textChannel,
+    unique
+  );
+
+  const names: string[] = [];
+  for (const id of finalIds) {
+    session.kill(id);
+    names.push(session.getPlayer(id)?.displayName ?? `<@${id}>`);
+  }
+
+  if (finalIds.length > 0) {
+    await demotePlayersToStageAudience(textChannel.guild, session, finalIds);
+  }
+
+  session.pendingNightDeaths = [];
+
+  const reveal = shouldRevealDeadRoles(session.compositionConfig);
+  const desc =
+    finalIds.length === 0
+      ? 'Personne n’est mort cette nuit.'
+      : reveal
+        ? `Victimes :\n${formatDeathAnnounces(session, finalIds, true)}`
+        : `Victimes : ${finalIds.map((id) => `<@${id}>`).join(', ')}`;
+
+  let embed = publicEmbed(
+    `Jour ${session.nightNumber} — lever du soleil`,
+    desc
+  );
+  if (finalIds.length > 0 && !reveal) {
+    embed.setFooter({ text: names.join(' · ') });
+  } else if (finalIds.length === 0) {
+    embed.setFooter({ text: 'Aucun mort' });
+  }
+
+  let files: AttachmentBuilder[] = [];
+  if (finalIds.length > 0 && reveal) {
+    const firstRole = session.getPlayer(finalIds[0]!)?.role;
+    if (firstRole !== undefined) {
+      const t = embedWithRoleCardThumbnail(
+        embed,
+        firstRole,
+        roleCardSource(session.presetPublicCode, firstRole)
+      );
+      embed = t.embed;
+      files = t.files;
+    }
+  }
+
+  await textChannel.send({ embeds: [embed], files });
+}
+
+export async function runNightSequence(
+  client: Client,
+  session: GameSession,
+  textChannel: GuildTextBasedChannel
+): Promise<void> {
+  try {
+    session.nightNumber++;
+    session.phase = 'night';
+    session.resetNightScratch();
+
+    await serverMuteAllOnGameStage(textChannel.guild, session);
+
+    await sendNightPrologue(textChannel, session);
+
+    if (
+      session.nightNumber === 1 &&
+      !session.thiefNightDone &&
+      session.thiefId()
+    ) {
+      await sendNightBeat(
+        textChannel,
+        'Mains dans la pénombre…',
+        'Le **Voleur** choisit avec qui **échanger sa carte**. _Réponse attendue dans **son fil privé** — patience dans ce salon._'
+      );
+    }
+    await runThiefPhase(client, session, textChannel);
+
+    if (session.nightNumber === 1 && !session.cupidNightDone && session.cupidId()) {
+      await sendNightBeat(
+        textChannel,
+        'Cupidon bande son arc…',
+        '**Cupidon** désigne les **amoureux** (ou le **ménage à trois**). _Choix dans **son fil privé**._'
+      );
+    }
+    await runCupidPhase(client, session, textChannel);
+
+    if (session.seerId()) {
+      const bavarde = session.compositionConfig.gossipSeerMode;
+      await sendNightBeat(
+        textChannel,
+        bavarde ? 'La Voyante bavarde observe…' : 'La Voyante consulte les cartes…',
+        bavarde
+          ? 'La **Voyante bavarde** **inspecte un rôle** ce soir — résultat **dans son fil privé** ; le salon ne révèle un **rôle** que dans les **messages d’annonce de mort**.'
+          : 'La **Voyante** observe un joueur pour savoir s’il est **Loup-Garou** ou non. _· fil privé._'
+      );
+    }
+    await runSeerPhase(client, session, textChannel);
+
+    if (session.nightNumber === 1 && session.angelId()) {
+      await sendNightBeat(
+        textChannel,
+        'Une lumière dans la nuit…',
+        'L’**Ange** désigne une **âme à protéger** contre les loups — **pour toute la partie**. _· fil privé._'
+      );
+    }
+    await runAngelPhase(client, session, textChannel);
+
+    if (session.guardId()) {
+      await sendNightBeat(
+        textChannel,
+        'La protection veille…',
+        'Le **Garde** choisit qui mettre **à l’abri des loups** cette nuit. _· fil privé._'
+      );
+    }
+    await runGuardPhase(client, session, textChannel);
+
+    if (session.wolfIds().length > 0) {
+      const pf = session.littleGirlId()
+        ? ' La **Petite fille** a aussi un message dans **son fil privé** (espionner ou non).'
+        : '';
+      await sendNightBeat(
+        textChannel,
+        'La meute se lève…',
+        'Les **Loups-Garou** vont **délibérer** puis **voter** leur victime. La prochaine annonce ouvre le **fil Meute** avec les consignes et **`/lg-vote`**.' +
+          pf
+      );
+    }
+    await runWolfPhase(client, session, textChannel);
+
+    if (session.witchId()) {
+      await sendNightBeat(
+        textChannel,
+        'Chaudron & grimoire…',
+        'La **Sorcière** peut utiliser ses **potions** (vie / mort). _· fil privé._'
+      );
+    }
+    await runWitchPhase(client, session, textChannel);
+
+    await sendDawnApproaching(textChannel, session);
+    await resolveNightDeaths(client, session, textChannel);
+    await announceGossipSeerAtDawn(session, textChannel);
+
+    if (session.guardProtectedUserId !== null) {
+      session.guardLastProtectedId = session.guardProtectedUserId;
+    }
+
+    session.phase = 'day';
+    const win = session.checkVictory();
+    if (win) {
+      session.phase = 'ended';
+      await presentGameOverPanel(client, session, textChannel, win);
+      return;
+    }
+
+    await startDayPhase(client, session, textChannel);
+  } catch (e) {
+    console.error(e);
+    await textChannel.send({
+      content: 'Erreur pendant la nuit — vérifie les logs du bot.',
+    });
+  }
+}
+
+export function fulfillSeer(channelId: string, seerId: string, target: string): boolean {
+  return fulfillPending(seerKey(channelId, seerId), target);
+}
+
+export function fulfillThief(
+  channelId: string,
+  thiefId: string,
+  target: string
+): boolean {
+  return fulfillPending(thiefKey(channelId, thiefId), target);
+}
+
+export function fulfillGuard(
+  channelId: string,
+  guardId: string,
+  target: string
+): boolean {
+  return fulfillPending(guardKey(channelId, guardId), target);
+}
+
+export function fulfillAngel(
+  channelId: string,
+  angelId: string,
+  target: string
+): boolean {
+  return fulfillPending(angelKey(channelId, angelId), target);
+}
+
+export function fulfillLittleGirlSpy(
+  channelId: string,
+  spy: boolean
+): boolean {
+  return fulfillPending(littleGirlSpyKey(channelId), spy ? 'yes' : 'no');
+}
+
+export function fulfillWitchSave(channelId: string, choice: 'yes' | 'no'): boolean {
+  return fulfillPending(witchSaveKey(channelId), choice);
+}
+
+export function fulfillWitchKill(channelId: string, targetOrSkip: string): boolean {
+  return fulfillPending(witchKillKey(channelId), targetOrSkip);
+}
