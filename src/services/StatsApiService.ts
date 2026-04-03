@@ -43,6 +43,7 @@ export function buildGameEndedPayload(session: GameSession, win: WinSide) {
     channelId: session.textChannelId,
     endedAt: new Date().toISOString(),
     win,
+    presetPublicCode: session.presetPublicCode ?? null,
     participants: [...session.players.values()].map((p) => ({
       discordUserId: p.userId,
       roleKey: p.role,
