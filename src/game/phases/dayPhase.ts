@@ -194,6 +194,12 @@ export async function startDayPhase(
       tally.set(t, (tally.get(t) ?? 0) + 1);
     }
 
+    if (session.ravenTargetId && session.getPlayer(session.ravenTargetId)?.alive) {
+      const ravenBonus = (tally.get(session.ravenTargetId) ?? 0) + 2;
+      tally.set(session.ravenTargetId, ravenBonus);
+    }
+    session.ravenTargetId = null;
+
     const maxScore = tally.size ? Math.max(...tally.values()) : 0;
     const winners = [...tally.entries()]
       .filter(([, s]) => s === maxScore)

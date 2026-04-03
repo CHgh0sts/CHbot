@@ -40,6 +40,7 @@ import {
   syncWolfPackMembership,
 } from '../../services/SecretThreadService';
 import { runCupidPhase } from '../cupid';
+import { runRavenPhase } from '../raven';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import {
   sendDawnApproaching,
@@ -840,6 +841,15 @@ export async function runNightSequence(
       );
     }
     await runWolfPhase(client, session, textChannel);
+
+    if (session.ravenId()) {
+      await sendNightBeat(
+        textChannel,
+        'Le Corbeau observe…',
+        'Le **Corbeau** choisit un joueur à **marquer** (optionnel). _· fil privé._'
+      );
+    }
+    await runRavenPhase(client, session, textChannel);
 
     if (session.witchId()) {
       await sendNightBeat(

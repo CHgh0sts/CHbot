@@ -1,4 +1,4 @@
-import type { GuildTextBasedChannel } from 'discord.js';
+﻿import type { GuildTextBasedChannel } from 'discord.js';
 import type { GameSession } from './GameSession';
 import { publicEmbed } from '../services/MessagingService';
 
@@ -40,6 +40,12 @@ export function buildNightRoadmap(session: GameSession): string {
     );
   }
 
+  if (session.ravenId()) {
+    lines.push(
+      `${i++}. **Corbeau** — marque optionnellement un joueur pour **+2 votes** demain _· fil privé_`
+    );
+  }
+
   if (session.wolfIds().length > 0) {
     const pf =
       session.littleGirlId() != null
@@ -72,12 +78,12 @@ export async function sendNightPrologue(
 ): Promise<void> {
   const roadmap = buildNightRoadmap(session);
   const body = [
-    'Le village **s’endort**. Les actions secrètes se jouent dans les **fils privés** (sous ce salon) — pas en message privé au bot.',
+    'Le village **s\u2019endort**. Les actions secrètes se jouent dans les **fils privés** (sous ce salon) — pas en message privé au bot.',
     '',
-    '**Ce soir, dans l’ordre (indicatif) :**',
+    '**Ce soir, dans l\u2019ordre (indicatif) :**',
     roadmap,
     '',
-    '_**Silence ici = normal** : le bot attend les choix dans les fils. Ce n’est en général **pas** un bug._',
+    '_**Silence ici = normal** : le bot attend les choix dans les fils. Ce n\u2019est en général **pas** un bug._',
   ].join('\n');
 
   await textChannel.send({
@@ -110,10 +116,10 @@ export async function sendMeuteBeat(
   await textChannel.send({
     embeds: [
       publicEmbed(
-        'La meute s’éveille',
-        `Les joueurs qui sont **Loups-Garou** ont reçu l’accès au **fil Meute** (vérifie tes **notifications** ou les **fils** sous ce salon).\n\n` +
-          `**Si tu es loup :** ouvre ce fil, lis le tableau de votes, puis **\`/lg-vote\`** avec l’option **cible** (pseudo ou mention).\n\n` +
-          `**Si tu n’es pas loup :** tu n’as rien à faire — **aucune liste** de loups n’est affichée ici à dessein.\n\n` +
+        'La meute s\u2019éveille',
+        `Les joueurs qui sont **Loups-Garou** ont reçu l\u2019accès au **fil Meute** (vérifie tes **notifications** ou les **fils** sous ce salon).\n\n` +
+          `**Si tu es loup :** ouvre ce fil, lis le tableau de votes, puis **\`/lg-vote\`** avec l\u2019option **cible** (pseudo ou mention).\n\n` +
+          `**Si tu n\u2019es pas loup :** tu n\u2019as rien à faire — **aucune liste** de loups n\u2019est affichée ici à dessein.\n\n` +
           `_Le salon attend la meute ; **pas de bug** si ça prend un peu de temps._`
       ).setColor(MEUTE),
     ],

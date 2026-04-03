@@ -105,6 +105,13 @@ export const slashCommands = [
         required: false,
       },
       {
+        name: 'corbeau',
+        description:
+          'Corbeau : oui = marque chaque nuit un joueur qui reçoit +2 votes au vote du village suivant',
+        type: 5,
+        required: false,
+      },
+      {
         name: 'roles_morts_visibles',
         description:
           'Afficher le rôle de chaque mort (ignoré si « nuit_sombre » est activé)',

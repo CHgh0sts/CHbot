@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+﻿import { randomInt } from 'node:crypto';
 import { MIN_PLAYERS } from '../config';
 import { Role } from '../types';
 
@@ -28,6 +28,8 @@ export interface CompositionConfig {
   includeAngel: boolean;
   /** **Petite fille** : chaque nuit pendant le vote des loups, peut espionner (50 % d’être repérée et mourir à la place de la cible). */
   includeLittleGirl: boolean;
+  /** **Corbeau** : chaque nuit, désigne un joueur vivant ; le lendemain ce joueur recoit +2 votes au vote du village. */
+  includeRaven: boolean;
   /** Afficher le rôle de chaque mort dans les annonces du salon (nuit / vote) */
   revealDeadRoles: boolean;
   /**
@@ -61,6 +63,7 @@ export function fixedCompositionTotal(c: CompositionConfig): number | null {
   if (c.includeThief) fixed++;
   if (c.includeAngel) fixed++;
   if (c.includeLittleGirl) fixed++;
+  if (c.includeRaven) fixed++;
   return w + fixed + c.villagerCount;
 }
 
@@ -76,6 +79,7 @@ export function villagerCountToMatchMinPlayers(c: CompositionConfig): number {
   if (c.includeThief) fixed++;
   if (c.includeAngel) fixed++;
   if (c.includeLittleGirl) fixed++;
+  if (c.includeRaven) fixed++;
   return Math.max(0, c.minPlayers - w - fixed);
 }
 
@@ -90,6 +94,7 @@ export function defaultCompositionConfig(): CompositionConfig {
   const includeThief = false;
   const includeAngel = false;
   const includeLittleGirl = false;
+  const includeRaven = false;
   const revealDeadRoles = true;
   const darkNightMode = false;
   const gossipSeerMode = false;
@@ -106,6 +111,7 @@ export function defaultCompositionConfig(): CompositionConfig {
     includeThief,
     includeAngel,
     includeLittleGirl,
+    includeRaven,
     revealDeadRoles,
     darkNightMode,
     gossipSeerMode,
@@ -132,6 +138,7 @@ export function cloneCompositionConfig(c: CompositionConfig): CompositionConfig 
     includeThief: c.includeThief,
     includeAngel: c.includeAngel,
     includeLittleGirl: c.includeLittleGirl,
+    includeRaven: c.includeRaven,
     revealDeadRoles: c.revealDeadRoles,
     darkNightMode: c.darkNightMode,
     gossipSeerMode: c.gossipSeerMode,
@@ -160,6 +167,7 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeThief) fixed++;
   if (config.includeAngel) fixed++;
   if (config.includeLittleGirl) fixed++;
+  if (config.includeRaven) fixed++;
 
   let villagers: number;
   if (config.villagerCount === null) {
@@ -193,6 +201,7 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeThief) roles.push(Role.Thief);
   if (config.includeAngel) roles.push(Role.Angel);
   if (config.includeLittleGirl) roles.push(Role.LittleGirl);
+  if (config.includeRaven) roles.push(Role.Raven);
   for (let i = 0; i < villagers; i++) roles.push(Role.Villager);
 
   return roles;
@@ -286,6 +295,9 @@ export function roleLabelFr(role: Role): string {
       return 'Ange';
     case Role.LittleGirl:
       return 'Petite fille';
+    case Role.Raven:
+      return 'Chaque nuit, tu designe un joueur vivant dans ton fil prive. Le lendemain, ce joueur recoit **+2 votes** supplementaires au vote du village (le salon public annonce qu un joueur a ete marque, sans reveler ton identite). Si tu ne designes personne (timeout / skip), rien ne se passe.';
+      return 'Corbeau';
     default:
       return role;
   }
@@ -310,6 +322,8 @@ export function rolePowerBlurb(role: Role): string {
       return '**Première nuit uniquement** : tu **échanges ta carte** avec un **autre joueur vivant**. Vous recevez chacun le rôle de l’autre (nouveau message dans vos fils privés).';
     case Role.Angel:
       return '**Pas d’action la nuit.** Au **tout premier vote du village**, si **c’est toi** qui es éliminé·e, tu **gagnes seul·e** et la partie s’arrête. **Sinon** (une autre personne est éliminée, ou égalité / pas de mort au vote), tu deviens un **villageois** ordinaire (nouveau message dans ton fil privé).';
+    case Role.Raven:
+      return 'Chaque nuit, tu designe un joueur vivant dans ton fil prive. Le lendemain, ce joueur recoit **+2 votes** supplementaires au vote du village (le salon public annonce qu un joueur a ete marque, sans reveler ton identite). Si tu ne designes personne (timeout / skip), rien ne se passe.';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:
@@ -342,6 +356,7 @@ export function formatCompositionReadable(
   if (c.includeThief) fixed++;
   if (c.includeAngel) fixed++;
   if (c.includeLittleGirl) fixed++;
+  if (c.includeRaven) fixed++;
 
   const lines: string[] = [];
   const wolfNote =
@@ -356,6 +371,7 @@ export function formatCompositionReadable(
   if (c.includeGuard) lines.push(`• **${roleLabelFr(Role.Guard)}** × **1**`);
   if (c.includeThief) lines.push(`• **${roleLabelFr(Role.Thief)}** × **1**`);
   if (c.includeAngel) lines.push(`• **${roleLabelFr(Role.Angel)}** × **1**`);
+  if (c.includeRaven) lines.push(`• **${roleLabelFr(Role.Raven)}** × **1**`);
   if (c.includeLittleGirl) {
     lines.push(`• **${roleLabelFr(Role.LittleGirl)}** × **1**`);
   }
@@ -391,6 +407,7 @@ export function formatCompositionReadable(
     `**Garde** : ${c.includeGuard ? '**activé**' : '**désactivé**'}`,
     `**Voleur** : ${c.includeThief ? '**activé**' : '**désactivé**'}`,
     `**Ange** : ${c.includeAngel ? '**activé**' : '**désactivé**'}`,
+    `**Corbeau** : ${c.includeRaven ? '**activé** — +2 votes sur sa cible le lendemain' : '**désactivé**'}`,
     `**Petite fille** : ${c.includeLittleGirl ? '**activée**' : '**désactivée**'}`,
     `**Nuit sombre** : ${c.darkNightMode ? '**oui** — jamais de rôle public' : 'non'}`,
     `**Voyante bavarde** : ${c.gossipSeerMode ? '**oui** — rôle exact en privé (public seulement via annonces de mort)' : 'non'}`,
@@ -399,3 +416,12 @@ export function formatCompositionReadable(
     `**Annonce des morts** : ${shouldRevealDeadRoles(c) ? 'rôle affiché publiquement' : c.darkNightMode ? 'rôle **jamais** public (nuit sombre)' : 'rôle masqué (seulement la mention)'}`,
   ].join('\n');
 }
+
+
+
+
+
+
+
+
+

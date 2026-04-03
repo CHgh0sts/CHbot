@@ -40,6 +40,7 @@ import {
 } from './game/phases/nightPhase';
 import { fulfillVote } from './game/phases/dayPhase';
 import { fulfillCupidPick } from './game/cupid';
+import { fulfillRaven } from './game/raven';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -175,6 +176,7 @@ client.on(Events.MessageCreate, async (message) => {
         includeThief: null,
         includeAngel: null,
         includeLittleGirl: null,
+        includeRaven: null,
         revealDeadRoles: null,
         darkNightMode: null,
         gossipSeerMode: null,
@@ -361,6 +363,7 @@ async function handleSlash(
       includeThief: interaction.options.getBoolean('voleur'),
       includeAngel: interaction.options.getBoolean('ange'),
       includeLittleGirl: interaction.options.getBoolean('petite_fille'),
+      includeRaven: interaction.options.getBoolean('corbeau'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
       darkNightMode: interaction.options.getBoolean('nuit_sombre'),
       gossipSeerMode: interaction.options.getBoolean('voyante_bavarde'),
@@ -521,6 +524,13 @@ async function handleSelect(
     const hp = session.getPlayer(interaction.user.id);
     if (!hp || hp.role !== Role.Hunter) return;
     fulfillHunterSelect(channelId, interaction.user.id, target);
+    return;
+  }
+
+  if (kind === 'raven') {
+    const ravenId = session.ravenId();
+    if (interaction.user.id !== ravenId) return;
+    fulfillRaven(channelId, target);
   }
 }
 
@@ -655,6 +665,13 @@ async function handleButton(
     const witchId = session.witchId();
     if (interaction.user.id !== witchId) return;
     fulfillWitchKill(channelId, 'skip');
+    return;
+  }
+
+  if (parts[2] === 'raven' && parts[3] === 'skip') {
+    const ravenId = session.ravenId();
+    if (interaction.user.id !== ravenId) return;
+    fulfillRaven(channelId, 'skip');
   }
 }
 

@@ -9,6 +9,7 @@ export enum Role {
   Thief = 'THIEF',
   Angel = 'ANGEL',
   LittleGirl = 'LITTLE_GIRL',
+  Raven = 'RAVEN',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';
@@ -20,7 +21,8 @@ export type NightSubPhase =
   | 'angel'
   | 'guard'
   | 'wolves'
-  | 'witch';
+  | 'witch'
+  | 'raven';
 
 export interface PlayerState {
   userId: string;

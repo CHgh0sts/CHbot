@@ -547,6 +547,7 @@ export async function runLgConfig(
     options.includeThief !== null ||
     options.includeAngel !== null ||
     options.includeLittleGirl !== null ||
+    options.includeRaven !== null ||
     options.revealDeadRoles !== null ||
     options.darkNightMode !== null ||
     options.gossipSeerMode !== null ||
@@ -606,6 +607,7 @@ export async function runLgConfig(
   if (options.includeLittleGirl !== null) {
     c.includeLittleGirl = options.includeLittleGirl;
   }
+  if (options.includeRaven !== null) c.includeRaven = options.includeRaven;
   if (options.revealDeadRoles !== null) c.revealDeadRoles = options.revealDeadRoles;
   if (options.darkNightMode !== null) c.darkNightMode = options.darkNightMode;
   if (options.gossipSeerMode !== null) c.gossipSeerMode = options.gossipSeerMode;
@@ -625,7 +627,8 @@ export async function runLgConfig(
     options.includeGuard !== null ||
     options.includeThief !== null ||
     options.includeAngel !== null ||
-    options.includeLittleGirl !== null;
+    options.includeLittleGirl !== null ||
+    options.includeRaven !== null;
 
   if (options.villageoisAuto === true) {
     c.villagerCount = null;

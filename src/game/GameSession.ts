@@ -86,6 +86,12 @@ export class GameSession {
   thiefNightDone = false;
 
   /**
+   * Joueur désigné cette nuit par le Corbeau (reçoit +2 votes au prochain vote du village).
+   * Remis à `null` après le vote du jour.
+   */
+  ravenTargetId: string | null = null;
+
+  /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
    * Inchangé si le garde n’a pas joué (timeout).
    */
@@ -184,6 +190,13 @@ export class GameSession {
   littleGirlId(): string | undefined {
     const p = [...this.players.values()].find(
       (x) => x.role === Role.LittleGirl && x.alive
+    );
+    return p?.userId;
+  }
+
+  ravenId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.Raven && x.alive
     );
     return p?.userId;
   }
@@ -320,6 +333,7 @@ export class GameSession {
     this.nightSubPhase = 'none';
     this.guardProtectedUserId = null;
     this.gossipSeerNightTargetId = null;
+    this.ravenTargetId = null;
   }
 
   roleLabel(role: Role): string {
