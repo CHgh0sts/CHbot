@@ -31,7 +31,6 @@ import {
 import { getSessionByTextChannel } from './game/GameManager';
 import { Role } from './types';
 import {
-  fulfillAngel,
   fulfillGuard,
   fulfillLittleGirlSpy,
   fulfillSeer,
@@ -502,13 +501,6 @@ async function handleSelect(
     const guardId = parts[3];
     if (!guardId || interaction.user.id !== guardId) return;
     fulfillGuard(channelId, guardId, target);
-    return;
-  }
-
-  if (kind === 'angel' && parts.length >= 4) {
-    const angelId = parts[3];
-    if (!angelId || interaction.user.id !== angelId) return;
-    fulfillAngel(channelId, angelId, target);
     return;
   }
 

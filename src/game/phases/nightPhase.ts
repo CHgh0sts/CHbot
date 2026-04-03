@@ -61,10 +61,6 @@ function guardKey(channelId: string, guardId: string): string {
   return `${channelId}:guard:${guardId}`;
 }
 
-function angelKey(channelId: string, angelId: string): string {
-  return `${channelId}:angel:${angelId}`;
-}
-
 export function littleGirlSpyKey(channelId: string): string {
   return `${channelId}:littlegirl:spy`;
 }
@@ -253,104 +249,6 @@ export async function runGuardPhase(
           'Nuit — protection',
           'Quelqu’un a passé la nuit **à l’abri des griffes des loups** (pouvoir de protection actif).'
         ).setColor(0x3498db),
-      ],
-    });
-  }
-}
-
-export async function runAngelPhase(
-  client: Client,
-  session: GameSession,
-  textChannel: GuildTextBasedChannel
-): Promise<void> {
-  if (session.nightNumber !== 1) return;
-  const angelId = session.angelId();
-  if (!angelId) return;
-
-  session.nightSubPhase = 'angel';
-
-  const targets = session.aliveIds().filter((id) => id !== angelId);
-  if (targets.length === 0) {
-    await textChannel.send({
-      content: '**Ange** : aucune cible pour la bénédiction.',
-    });
-    return;
-  }
-
-  const embed = new EmbedBuilder()
-    .setTitle('Ange — 1re nuit')
-    .setDescription(
-      'Choisis un joueur vivant (**autre que toi**) à **bénir** : tant qu’il est en vie, il **ne peut pas être tué par le vote des loups** (sorcière, vote du village, chagrin, chasseur, etc. restent possibles).'
-    )
-    .setColor(0xe8daef);
-
-  const menu = buildAlivePlayerSelect(
-    `lg:${session.textChannelId}:angel:${angelId}`,
-    'Bénir…',
-    targets,
-    session.labelMap(),
-    new Set()
-  );
-
-  const ok = await sendComponentsToPlayerThread(
-        client,
-        session,
-    angelId,
-    embed,
-    [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)]
-  );
-
-  if (!ok) {
-    await textChannel.send({
-      content: '**Ange** : impossible d’envoyer l’action — bénédiction ignorée.',
-    });
-    return;
-  }
-
-  const picked = await createWaiter(
-    angelKey(session.textChannelId, angelId),
-    NIGHT_ACTION_MS
-  );
-  if (!picked) {
-    await textChannel.send({
-      content: '**Ange** : temps écoulé — **aucune** bénédiction.',
-    });
-    return;
-  }
-
-  session.angelProtectedUserId = picked;
-  await sendInPlayerSecretThread(client, session, angelId, {
-    embeds: [
-      new EmbedBuilder()
-        .setTitle('Bénédiction')
-        .setDescription(
-          `**${session.getPlayer(picked)?.displayName ?? '?'}** est protégé·e contre les **loups**.`
-        )
-        .setColor(0xe8daef),
-    ],
-  });
-
-  const blessed = session.getPlayer(picked);
-  if (blessed) {
-    await sendInPlayerSecretThread(client, session, picked, {
-      embeds: [
-        new EmbedBuilder()
-          .setTitle('Une présence protectrice')
-          .setDescription(
-            '_Tu sens une **lueur** — les **griffes des loups** ne pourront pas t’atteindre tant que tu es en vie._'
-          )
-          .setColor(0xe8daef),
-      ],
-    });
-  }
-
-  if (session.compositionConfig.announceNightProtection) {
-    await textChannel.send({
-      embeds: [
-        publicEmbed(
-          'Nuit — bénédiction',
-          'Une **lueur bienveillante** semble veiller sur quelqu’un dans le village…'
-        ).setColor(0xe8daef),
       ],
     });
   }
@@ -659,9 +557,6 @@ export async function runWolfPhase(
     if (wolfTarget === session.guardProtectedUserId) {
       wolfTarget = null;
     }
-    if (wolfTarget === session.angelProtectedUserId) {
-      wolfTarget = null;
-    }
     session.wolfTargetId = wolfTarget;
   }
 
@@ -924,15 +819,6 @@ export async function runNightSequence(
     }
     await runSeerPhase(client, session, textChannel);
 
-    if (session.nightNumber === 1 && session.angelId()) {
-      await sendNightBeat(
-        textChannel,
-        'Une lumière dans la nuit…',
-        'L’**Ange** désigne une **âme à protéger** contre les loups — **pour toute la partie**. _· fil privé._'
-      );
-    }
-    await runAngelPhase(client, session, textChannel);
-
     if (session.guardId()) {
       await sendNightBeat(
         textChannel,
@@ -1007,14 +893,6 @@ export function fulfillGuard(
   target: string
 ): boolean {
   return fulfillPending(guardKey(channelId, guardId), target);
-}
-
-export function fulfillAngel(
-  channelId: string,
-  angelId: string,
-  target: string
-): boolean {
-  return fulfillPending(angelKey(channelId, angelId), target);
 }
 
 export function fulfillLittleGirlSpy(

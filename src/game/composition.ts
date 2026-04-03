@@ -24,7 +24,7 @@ export interface CompositionConfig {
   includeCupid: boolean;
   includeGuard: boolean;
   includeThief: boolean;
-  /** **Ange** : 1re nuit, bénit un joueur **protégé à vie** contre les **seuls** dégâts des loups. */
+  /** **Ange** : gagne **seul** s’il est éliminé au **1er vote du village** ; sinon il devient **villageois**. */
   includeAngel: boolean;
   /** **Petite fille** : chaque nuit pendant le vote des loups, peut espionner (50 % d’être repérée et mourir à la place de la cible). */
   includeLittleGirl: boolean;
@@ -309,7 +309,7 @@ export function rolePowerBlurb(role: Role): string {
     case Role.Thief:
       return '**Première nuit uniquement** : tu **échanges ta carte** avec un **autre joueur vivant**. Vous recevez chacun le rôle de l’autre (nouveau message dans vos fils privés).';
     case Role.Angel:
-      return '**Première nuit uniquement** : tu **bénis un joueur vivant autre que toi**. Tant qu’il est en vie, il **ne peut pas être tué par les loups** (vote de la meute annulé pour lui ; sorcière, vote du jour, chagrin, etc. restent possibles).';
+      return '**Pas d’action la nuit.** Au **tout premier vote du village**, si **c’est toi** qui es éliminé·e, tu **gagnes seul·e** et la partie s’arrête. **Sinon** (une autre personne est éliminée, ou égalité / pas de mort au vote), tu deviens un **villageois** ordinaire (nouveau message dans ton fil privé).';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:

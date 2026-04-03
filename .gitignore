@@ -3,3 +3,6 @@ dist/
 .env
 *.log
 .DS_Store
+
+# Frontend (non versionné pour ce dépôt)
+frontend/

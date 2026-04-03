@@ -57,17 +57,19 @@ function canUsePostGameButtons(
   return false;
 }
 
+export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel';
+
 /** Joueurs du camp victorieux (vivants ou morts), selon le rôle final en base. */
-function winningUserIds(
-  session: GameSession,
-  win: 'wolves' | 'village' | 'lovers'
-): string[] {
+function winningUserIds(session: GameSession, win: GameOverWin): string[] {
   const players = [...session.players.values()];
   if (win === 'wolves') {
     return players.filter((p) => p.role === Role.Werewolf).map((p) => p.userId);
   }
   if (win === 'village') {
     return players.filter((p) => p.role !== Role.Werewolf).map((p) => p.userId);
+  }
+  if (win === 'angel') {
+    return players.filter((p) => p.role === Role.Angel).map((p) => p.userId);
   }
   const lg = session.loversGroup;
   if (lg && lg.length >= 2) {
@@ -89,7 +91,7 @@ function clipField(s: string, max = 1024): string {
   return `${s.slice(0, max - 20)}… _(tronqué)_`;
 }
 
-function buildWinnersField(session: GameSession, win: 'wolves' | 'village' | 'lovers'): string {
+function buildWinnersField(session: GameSession, win: GameOverWin): string {
   const ids = winningUserIds(session, win);
   const lines: string[] = [];
   for (const uid of ids) {
@@ -101,10 +103,7 @@ function buildWinnersField(session: GameSession, win: 'wolves' | 'village' | 'lo
   return clipField(lines.join('\n') || '—');
 }
 
-function buildSummaryField(
-  session: GameSession,
-  win: 'wolves' | 'village' | 'lovers'
-): string {
+function buildSummaryField(session: GameSession, win: GameOverWin): string {
   const players = [...session.players.values()];
   const n = players.length;
   const aliveN = players.filter((p) => p.alive).length;
@@ -114,7 +113,9 @@ function buildSummaryField(
       ? '**Loups-Garous**'
       : win === 'village'
         ? '**Village** (tous les non-loups)'
-        : '**Amoureux**';
+        : win === 'angel'
+          ? '**Ange** (victoire solo au 1er vote)'
+          : '**Amoureux**';
 
   const header = [
     `**Nuits** : **${nights}** · **Joueurs** : **${n}** · **Survivants** : **${aliveN}**`,
@@ -141,7 +142,7 @@ export async function presentGameOverPanel(
   client: Client,
   session: GameSession,
   textChannel: GuildTextBasedChannel,
-  win: 'wolves' | 'village' | 'lovers'
+  win: GameOverWin
 ): Promise<void> {
   cancelAllForChannel(session.textChannelId);
   await deleteAllGameThreads(client, session);
@@ -165,10 +166,18 @@ export async function presentGameOverPanel(
         ? session.loversGroup && session.loversGroup.length >= 3
           ? '**Le ménage à trois** remporte la partie (derniers survivants du lien).'
           : '**Les Amoureux** remportent la partie (derniers survivants ensemble).'
-        : '**Le village** remporte la partie.';
+        : win === 'angel'
+          ? '**L’Ange** remporte la partie **seul·e** (éliminé·e au premier vote du village).'
+          : '**Le village** remporte la partie.';
 
   const color =
-    win === 'wolves' ? 0xed4245 : win === 'lovers' ? 0xff69b4 : 0x57f287;
+    win === 'wolves'
+      ? 0xed4245
+      : win === 'lovers'
+        ? 0xff69b4
+        : win === 'angel'
+          ? 0xf1c40f
+          : 0x57f287;
 
   const embed = new EmbedBuilder()
     .setTitle('Partie terminée')

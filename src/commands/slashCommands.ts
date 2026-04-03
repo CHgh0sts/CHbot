@@ -93,7 +93,7 @@ export const slashCommands = [
       {
         name: 'ange',
         description:
-          'Ange : oui = 1 Ange (1re nuit, bénit un joueur protégé à vie contre les loups)',
+          'Ange : oui = 1 Ange (gagne seul si éliminé au 1er vote du village, sinon devient villageois)',
         type: 5,
         required: false,
       },

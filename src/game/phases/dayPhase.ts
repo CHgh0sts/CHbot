@@ -10,7 +10,13 @@ import {
 } from 'discord.js';
 import { createWaiter, fulfillPending } from '../../interaction/pending';
 import { DAY_VOTE_MS } from '../../config';
+import { Role } from '../../types';
 import type { GameSession } from '../GameSession';
+import {
+  roleLabelFr,
+  rolePowerBlurb,
+} from '../composition';
+import { deliverRoleToPlayer } from '../../services/RoleDeliveryService';
 import {
   buildAlivePlayerSelect,
   publicEmbed,
@@ -65,6 +71,33 @@ function formatDayVoteTallyLines(
   );
 }
 
+/** Après le **premier** vote du village : l’Ange vivant redevient villageois. */
+async function demoteAngelToVillagerIfAlive(
+  client: Client,
+  session: GameSession
+): Promise<boolean> {
+  const angel = [...session.players.values()].find(
+    (p) => p.role === Role.Angel && p.alive
+  );
+  if (!angel) return false;
+  angel.role = Role.Villager;
+  const embed = new EmbedBuilder()
+    .setTitle('Ton nouveau rôle')
+    .setDescription(
+      `Tu n’es plus l’**Ange** : tu es maintenant **${roleLabelFr(Role.Villager)}**.\n\n${rolePowerBlurb(Role.Villager)}`
+    )
+    .setColor(0x3498db);
+  await deliverRoleToPlayer(
+    client,
+    session,
+    angel.userId,
+    angel.displayName,
+    embed,
+    Role.Villager
+  );
+  return true;
+}
+
 export async function startDayPhase(
   client: Client,
   session: GameSession,
@@ -83,12 +116,17 @@ export async function startDayPhase(
       return;
     }
 
+    const angelNote = session.angelId()
+      ? `\n\n_L’**Ange** est en jeu : au **tout premier vote du village**, si **l’Ange** est éliminé·e, **il/elle gagne seul·e** et la partie s’arrête. **Sinon**, l’Ange **devient villageois·e**._`
+      : '';
+
     await sendNightBeat(
       textChannel,
       'Le jour — débat & vote',
       `Le village est **éveillé**. Discutez ici ou en vocal, puis chaque **vivant** recevra **en même temps** un **menu de vote** dans **son fil privé**.\n\n` +
         `⏱️ **${Math.floor(DAY_VOTE_MS / 1000)} s** maximum après l’envoi des menus.\n\n` +
-        `_Si ce salon reste calme quelques secondes, c’est que le bot **prépare** les votes — **pas un bug**._`,
+        `_Si ce salon reste calme quelques secondes, c’est que le bot **prépare** les votes — **pas un bug**._` +
+        angelNote,
       0x3498db
     );
 
@@ -170,6 +208,8 @@ export async function startDayPhase(
       ],
     });
 
+    const isFirstVillageVote = session.dayVoteCount === 0;
+
     if (winners.length !== 1 || maxScore === 0) {
       await textChannel.send({
         content:
@@ -177,8 +217,46 @@ export async function startDayPhase(
             ? '**Égalité au vote** — personne n’est éliminé aujourd’hui.'
             : '**Aucun vote valide** — pas d’élimination.',
       });
+      if (isFirstVillageVote) {
+        const demoted = await demoteAngelToVillagerIfAlive(client, session);
+        if (demoted) {
+          await textChannel.send({
+            embeds: [
+              publicEmbed(
+                'Ange',
+                '**Premier vote** sans élimination unique : l’**Ange** redevient **villageois** (voir fil privé).'
+              ).setColor(0xe8daef),
+            ],
+          });
+        }
+      }
+      session.dayVoteCount++;
     } else {
       const victim = winners[0]!;
+      const victimPlayer = session.getPlayer(victim);
+
+      if (
+        isFirstVillageVote &&
+        victimPlayer?.role === Role.Angel
+      ) {
+        session.kill(victim);
+        await demotePlayersToStageAudience(textChannel.guild, session, [
+          victim,
+        ]);
+        await textChannel.send({
+          embeds: [
+            publicEmbed(
+              'L’Ange triomphe',
+              `**${victimPlayer.displayName}** (<@${victim}>) était l’**Ange** : éliminé·e au **premier vote du village**, **il/elle remporte la partie seul·e** — fin de partie.`
+            ).setColor(0xf1c40f),
+          ],
+        });
+        session.dayVoteCount++;
+        session.phase = 'ended';
+        await presentGameOverPanel(client, session, textChannel, 'angel');
+        return;
+      }
+
       const finalDeaths = await expandDeathsWithHunterAndLovers(
         client,
         session,
@@ -218,6 +296,21 @@ export async function startDayPhase(
         }
       }
       await textChannel.send({ embeds: [voteEmbed], files });
+
+      if (isFirstVillageVote) {
+        const demoted = await demoteAngelToVillagerIfAlive(client, session);
+        if (demoted) {
+          await textChannel.send({
+            embeds: [
+              publicEmbed(
+                'Ange',
+                '**Premier vote** résolu : l’**Ange** n’a pas été éliminé·e — **il/elle devient villageois·e** (voir fil privé).'
+              ).setColor(0xe8daef),
+            ],
+          });
+        }
+      }
+      session.dayVoteCount++;
     }
 
     const win = session.checkVictory();

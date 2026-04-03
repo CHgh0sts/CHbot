@@ -34,12 +34,6 @@ export function buildNightRoadmap(session: GameSession): string {
     );
   }
 
-  if (session.nightNumber === 1 && session.angelId()) {
-    lines.push(
-      `${i++}. **Ange** — **bénit** un joueur contre les **loups** (toute la partie) _· fil privé_`
-    );
-  }
-
   if (session.guardId()) {
     lines.push(
       `${i++}. **Garde** — désigne qui protéger des loups _· fil privé_`

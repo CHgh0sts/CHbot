@@ -95,10 +95,10 @@ export class GameSession {
   guardProtectedUserId: string | null = null;
 
   /**
-   * Bénédiction de l’**Ange** (1re nuit) : ce joueur ne peut pas être tué par le **vote des loups**
-   * tant qu’il est vivant (autres morts restent possibles).
+   * Nombre de **votes du village** déjà résolus (0 = prochain vote = premier du jour).
+   * Sert au pouvoir **Ange** (1er vote uniquement).
    */
-  angelProtectedUserId: string | null = null;
+  dayVoteCount = 0;
 
   constructor(
     textChannelId: string,
@@ -287,7 +287,7 @@ export class GameSession {
     this.thiefNightDone = false;
     this.guardLastProtectedId = null;
     this.guardProtectedUserId = null;
-    this.angelProtectedUserId = null;
+    this.dayVoteCount = 0;
     this.loversThreadId = null;
   }
 
