@@ -30,6 +30,7 @@ export enum Role {
   DevotedServant = 'DEVOTED_SERVANT',
   InfectFather = 'INFECT_FATHER',
   DogWolf = 'DOG_WOLF',
+  Dictateur = 'DICTATEUR',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';

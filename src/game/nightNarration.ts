@@ -153,6 +153,10 @@ export function buildNightRoadmap(session: GameSession): string {
     lines.push(`_(passif) **Servante D\u00e9vou\u00e9e** \u2014 apr\u00e8s chaque vote du village, peut prendre la place de la victime_`);
   }
 
+  if (session.dictateurId() && !session.dictateurUsed) {
+    lines.push(`_(passif/jour) **Dictateur** \u2014 avant le vote du village, peut s\u2019imposer et d\u00e9signer lui-m\u00eame la victime (1 fois par partie)_`);
+  }
+
   const beforeAube = lines.length;
   lines.push(`${i}. **Aube** — révélation des morts et suite de la partie`);
 

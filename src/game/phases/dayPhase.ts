@@ -38,6 +38,7 @@ import { runScapegoatDeathChoice } from '../scapegoat';
 import { checkWildChildTransform } from '../wildChild';
 import { addDeadToNecromancerThread } from '../necromancer';
 import { runDevotedServantChoice } from '../devotedServant';
+import { runDictateurPhase } from '../dictateur';
 
 function voteKey(channelId: string, voterId: string): string {
   return `${channelId}:vote:${voterId}`;
@@ -142,6 +143,35 @@ export async function startDayPhase(
       0x3498db
     );
 
+    // Dictateur : peut intervenir avant le vote normal
+    const dictImposed = await runDictateurPhase(client, session, textChannel, alive);
+    if (dictImposed !== null) {
+      // Le Dictateur a impos\u00e9 sa victime \u2014 traiter l\u2019\u00e9limination et passer au soir
+      const dictFinalDeaths = await expandDeathsWithHunterAndLovers(
+        client,
+        session,
+        textChannel,
+        [dictImposed]
+      );
+      for (const id of dictFinalDeaths) {
+        session.kill(id);
+        await addDeadToNecromancerThread(client, session, id);
+      }
+      if (dictFinalDeaths.length > 0) {
+        await demotePlayersToStageAudience(textChannel.guild, session, dictFinalDeaths);
+        await checkWildChildTransform(client, session, textChannel, dictFinalDeaths);
+      }
+      session.dayVoteCount++;
+      const dictWinCheck = session.checkVictory();
+      if (dictWinCheck) {
+        session.phase = 'ended';
+        await presentGameOverPanel(client, session, textChannel, dictWinCheck);
+        return;
+      }
+      await runNightSequence(client, session, textChannel);
+      return;
+    }
+
     const foolId = session.foolOfVillageId();
     const bannedIds = session.scapegoatVoteBannedIds;
     session.scapegoatVoteBannedIds = new Set();
@@ -244,6 +274,12 @@ export async function startDayPhase(
       tally.set(session.ravenTargetId, ravenBonus);
     }
     session.ravenTargetId = null;
+
+    // Maire (Dictateur couronné) : son vote compte double
+    if (session.mayorId && votes.has(session.mayorId)) {
+      const mayorTarget = votes.get(session.mayorId)!;
+      tally.set(mayorTarget, (tally.get(mayorTarget) ?? 0) + 1);
+    }
 
     const maxScore = tally.size ? Math.max(...tally.values()) : 0;
     const tied = [...tally.entries()]

@@ -246,6 +246,12 @@ export const slashCommands = [
         required: false,
       },
       {
+        name: 'dictateur',
+        description: 'Dictateur : oui = peut imposer la victime du vote (1 fois, devient Maire si correct)',
+        type: 5,
+        required: false,
+      },
+      {
         name: 'tiebreaker_random',
         description:
           '\u00c9galit\u00e9 au vote : oui = tirage au sort parmi les ex-aequo (non = personne ne meurt)',
@@ -387,6 +393,7 @@ export const slashCommands = [
           { name: 'Servante D\u00e9vou\u00e9e',        value: 'servante' },
           { name: 'Infect P\u00e8re des Loups',        value: 'infect_pere' },
           { name: 'Chien-Loup',                         value: 'chien_loup' },
+          { name: 'Dictateur',                          value: 'dictateur' },
         ],
       },
     ],

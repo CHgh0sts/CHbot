@@ -54,6 +54,7 @@ import { fulfillSectarian } from './game/sectarian';
 import { fulfillDevotedServant } from './game/devotedServant';
 import { fulfillInfectFather } from './game/infectFather';
 import { fulfillDogWolf } from './game/dogWolf';
+import { fulfillDictateurTrigger, fulfillDictateurPick } from './game/dictateur';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -210,6 +211,7 @@ client.on(Events.MessageCreate, async (message) => {
         includeDevotedServant: null,
         includeInfectFather: null,
         includeDogWolf: null,
+        includeDictateur: null,
         tiebreakerRandom: null,
         skipFirstNightKill: null,
         revealDeadRoles: null,
@@ -424,6 +426,7 @@ async function handleSlash(
       includeDevotedServant: interaction.options.getBoolean('servante_devouee'),
       includeInfectFather: interaction.options.getBoolean('infect_pere_loups'),
       includeDogWolf: interaction.options.getBoolean('chien_loup'),
+      includeDictateur: interaction.options.getBoolean('dictateur'),
       tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
       skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
@@ -648,6 +651,11 @@ async function handleSelect(
     if (interaction.user.id !== session.sectarianId()) return;
     fulfillSectarian(channelId, target);
   }
+
+  if (kind === 'dictateur' && parts[3] === 'pick') {
+    if (interaction.user.id !== session.dictateurId()) return;
+    fulfillDictateurPick(channelId, target);
+  }
 }
 
 async function handleButton(
@@ -839,6 +847,13 @@ async function handleButton(
     await interaction.deferUpdate().catch(() => null);
     const choice = parts[3] ?? 'village';
     fulfillDogWolf(channelId, choice);
+  }
+
+  if (parts[2] === 'dictateur' && (parts[3] === 'act' || parts[3] === 'skip')) {
+    const dictId = session.dictateurId();
+    if (interaction.user.id !== dictId) return;
+    await interaction.deferUpdate().catch(() => null);
+    fulfillDictateurTrigger(channelId, parts[3]);
   }
 }
 

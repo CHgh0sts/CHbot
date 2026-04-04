@@ -36,6 +36,7 @@ const ROLE_IMAGE_BASENAMES: Record<Role, string[]> = {
   [Role.DevotedServant]: ['servante', 'devoted_servant'],
   [Role.InfectFather]: ['infect_pere', 'infect_father'],
   [Role.DogWolf]: ['chien_loup', 'dog_wolf'],
+  [Role.Dictateur]: ['dictateur'],
 };
 
 const EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'] as const;

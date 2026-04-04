@@ -360,6 +360,19 @@ const ROLE_INFO: Record<string, RoleInfo> = {
     victory: 'Gagne avec le **camp choisi** (Village ou Loups).',
     tip: 'Si vous choisissez les Loups, gardez un comportement villageois le jour. Votre avantage : le village vous fait confiance.',
   },
+  dictateur: {
+    name: 'Dictateur',
+    emoji: '\uD83D\uDC51',
+    camp: 'Village',
+    campColor: 0xc0392b,
+    power:
+      '**Une fois par partie**, au d\u00e9but du vote du village, le Dictateur peut se r\u00e9v\u00e9ler et **imposer sa propre victime**, annulant le vote normal. ' +
+      '\u2022 S\u2019il cible un **ennemi** (loup-garou, solo hostile\u2026) \u2192 il **survit** et devient **Maire** (son vote vaut **2 voix** lors de tous les votes suivants). ' +
+      '\u2022 S\u2019il cible un **innocent** (villageois, r\u00f4le village\u2026) \u2192 il **meurt imm\u00e9diatement**.',
+    timing: 'Jour — avant chaque vote du village (30 s pour d\u00e9cider, 60 s pour choisir).',
+    victory: 'Gagne avec le **Village**.',
+    tip: '\u00c9tudiez bien le comportement des joueurs avant d\u2019agir. Une erreur vous co\u00fbte la vie. Attendez le bon moment plut\u00f4t que d\u2019agir au premier vote.',
+  },
 };
 
 const CAMP_EMOJI: Record<string, string> = {

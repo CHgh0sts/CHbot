@@ -154,6 +154,10 @@ export class GameSession {
   dogWolfIsWolf = false;
   /** 	rue si le Chien-Loup a d\u00e9j\u00e0 fait son choix. */
   dogWolfChoseSide = false;
+  /** 	rue une fois que le Dictateur a utilis\u00e9 son pouvoir. */
+  dictateurUsed = false;
+  /** ID du joueur qui poss\u00e8de le titre de Maire (double poids au vote). */
+  mayorId: string | null = null;
 
   /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
@@ -392,6 +396,10 @@ export class GameSession {
     return [...this.players.values()].find((x) => x.role === Role.DogWolf && x.alive)?.userId;
   }
 
+  dictateurId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.Dictateur && x.alive)?.userId;
+  }
+
   getPlayer(userId: string): PlayerState | undefined {
     return this.players.get(userId);
   }
@@ -540,6 +548,8 @@ export class GameSession {
     this.infectFatherInfectedId = null;
     this.dogWolfIsWolf = false;
     this.dogWolfChoseSide = false;
+    this.dictateurUsed = false;
+    this.mayorId = null;
   }
 
   async hydrateDisplayNames(client: Client): Promise<void> {
@@ -578,6 +588,7 @@ export class GameSession {
     return roleLabelFr(role);
   }
 }
+
 
 
 

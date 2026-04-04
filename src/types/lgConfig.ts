@@ -31,6 +31,7 @@ export interface LgConfigOptions {
   includeDevotedServant: boolean | null;
   includeInfectFather: boolean | null;
   includeDogWolf: boolean | null;
+  includeDictateur: boolean | null;
   tiebreakerRandom: boolean | null;
   skipFirstNightKill: boolean | null;
   revealDeadRoles: boolean | null;

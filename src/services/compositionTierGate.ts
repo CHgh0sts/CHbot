@@ -37,6 +37,7 @@ const GATED_KEYS: (keyof CompositionConfig & keyof LgConfigOptions)[] = [
   'includeDevotedServant',
   'includeInfectFather',
   'includeDogWolf',
+  'includeDictateur',
   'revealDeadRoles',
   'darkNightMode',
   'gossipSeerMode',

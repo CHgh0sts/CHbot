@@ -568,6 +568,7 @@ export async function runLgConfig(
     options.includeDevotedServant !== null ||
     options.includeInfectFather !== null ||
     options.includeDogWolf !== null ||
+    options.includeDictateur !== null ||
     options.tiebreakerRandom !== null ||
     options.skipFirstNightKill !== null ||
     options.revealDeadRoles !== null ||
@@ -650,6 +651,7 @@ export async function runLgConfig(
   if (options.includeDevotedServant !== null) c.includeDevotedServant = options.includeDevotedServant;
   if (options.includeInfectFather !== null) c.includeInfectFather = options.includeInfectFather;
   if (options.includeDogWolf !== null) c.includeDogWolf = options.includeDogWolf;
+  if (options.includeDictateur !== null) c.includeDictateur = options.includeDictateur;
   if (options.tiebreakerRandom !== null) c.tiebreakerRandom = options.tiebreakerRandom;
   if (options.skipFirstNightKill !== null) c.skipFirstNightKill = options.skipFirstNightKill;
   if (options.revealDeadRoles !== null) c.revealDeadRoles = options.revealDeadRoles;
@@ -692,7 +694,8 @@ export async function runLgConfig(
     options.includeSectarian !== null ||
     options.includeDevotedServant !== null ||
     options.includeInfectFather !== null ||
-    options.includeDogWolf !== null;
+    options.includeDogWolf !== null ||
+    options.includeDictateur !== null;
 
   if (options.villageoisAuto === true) {
     c.villagerCount = null;
