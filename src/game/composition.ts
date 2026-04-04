@@ -48,6 +48,16 @@ export interface CompositionConfig {
   includeScapegoat: boolean;
   /** **Enfant Sauvage** : camp Village au départ. Nuit 1, il choisit un modèle. Si le modèle meurt, il rejoint les loups-garous. */
   includeWildChild: boolean;
+  /** **Renard** : camp Village. Chaque nuit, flairer 3 joueurs ; sait si un loup est parmi eux (oui/non). Si non → perd son pouvoir définitivement. */
+  includeFox: boolean;
+  /** **Pyromane** : camp Solo. Chaque nuit, arrose 1 joueur. Peut déclencher l'incendie pour tuer tous les arrosés en une seule fois. Gagne seul si tous les survivants (sauf lui) sont arrosés. */
+  includePyromaniac: boolean;
+  /** **Ours de Monsieur Ours** : camp Village. À chaque aube, si l'un de ses 2 voisins secrets (tirés au sort nuit 1) est un loup vivant, l'ours grogne publiquement. Rôle passif. */
+  includeBearTamer: boolean;
+  /** **Deux Sœurs** : camp Village × 2. La nuit 1, elles se reconnaissent via un fil partagé (comme les amoureux, sans mourir ensemble). */
+  includeTwoSisters: boolean;
+  /** **Trois Frères** : camp Village × 3. La nuit 1, ils se reconnaissent via un fil partagé. */
+  includeThreeBrothers: boolean;
   /** **Tirage au sort en cas d'égalité** au vote du village : un ex-aequo est éliminé aléatoirement (sinon personne ne meurt). */
   tiebreakerRandom: boolean;
   /** **Première nuit sans meurtre** : les loups se réunissent mais n'éliminent personne la nuit 1. */
@@ -95,6 +105,11 @@ export function fixedCompositionTotal(c: CompositionConfig): number | null {
   if (c.includeRustySwordKnight) fixed++;
   if (c.includeScapegoat) fixed++;
   if (c.includeWildChild) fixed++;
+  if (c.includeFox) fixed++;
+  if (c.includePyromaniac) fixed++;
+  if (c.includeBearTamer) fixed++;
+  if (c.includeTwoSisters) fixed += 2;
+  if (c.includeThreeBrothers) fixed += 3;
   return w + fixed + c.villagerCount;
 }
 
@@ -120,6 +135,11 @@ export function villagerCountToMatchMinPlayers(c: CompositionConfig): number {
   if (c.includeRustySwordKnight) fixed++;
   if (c.includeScapegoat) fixed++;
   if (c.includeWildChild) fixed++;
+  if (c.includeFox) fixed++;
+  if (c.includePyromaniac) fixed++;
+  if (c.includeBearTamer) fixed++;
+  if (c.includeTwoSisters) fixed += 2;
+  if (c.includeThreeBrothers) fixed += 3;
   return Math.max(0, c.minPlayers - w - fixed);
 }
 
@@ -144,6 +164,11 @@ export function defaultCompositionConfig(): CompositionConfig {
   const includeRustySwordKnight = false;
   const includeScapegoat = false;
   const includeWildChild = false;
+  const includeFox = false;
+  const includePyromaniac = false;
+  const includeBearTamer = false;
+  const includeTwoSisters = false;
+  const includeThreeBrothers = false;
   const tiebreakerRandom = false;
   const skipFirstNightKill = false;
   const revealDeadRoles = true;
@@ -172,6 +197,11 @@ export function defaultCompositionConfig(): CompositionConfig {
     includeRustySwordKnight,
     includeScapegoat,
     includeWildChild,
+    includeFox,
+    includePyromaniac,
+    includeBearTamer,
+    includeTwoSisters,
+    includeThreeBrothers,
     tiebreakerRandom,
     skipFirstNightKill,
     revealDeadRoles,
@@ -210,6 +240,11 @@ export function cloneCompositionConfig(c: CompositionConfig): CompositionConfig 
     includeRustySwordKnight: c.includeRustySwordKnight,
     includeScapegoat: c.includeScapegoat,
     includeWildChild: c.includeWildChild,
+    includeFox: c.includeFox,
+    includePyromaniac: c.includePyromaniac,
+    includeBearTamer: c.includeBearTamer,
+    includeTwoSisters: c.includeTwoSisters,
+    includeThreeBrothers: c.includeThreeBrothers,
     tiebreakerRandom: c.tiebreakerRandom,
     skipFirstNightKill: c.skipFirstNightKill,
     revealDeadRoles: c.revealDeadRoles,
@@ -250,6 +285,11 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeRustySwordKnight) fixed++;
   if (config.includeScapegoat) fixed++;
   if (config.includeWildChild) fixed++;
+  if (config.includeFox) fixed++;
+  if (config.includePyromaniac) fixed++;
+  if (config.includeBearTamer) fixed++;
+  if (config.includeTwoSisters) fixed += 2;
+  if (config.includeThreeBrothers) fixed += 3;
 
   let villagers: number;
   if (config.villagerCount === null) {
@@ -293,6 +333,11 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeRustySwordKnight) roles.push(Role.RustySwordKnight);
   if (config.includeScapegoat) roles.push(Role.Scapegoat);
   if (config.includeWildChild) roles.push(Role.WildChild);
+  if (config.includeFox) roles.push(Role.Fox);
+  if (config.includePyromaniac) roles.push(Role.Pyromaniac);
+  if (config.includeBearTamer) roles.push(Role.BearTamer);
+  if (config.includeTwoSisters) { roles.push(Role.TwoSisters); roles.push(Role.TwoSisters); }
+  if (config.includeThreeBrothers) { roles.push(Role.ThreeBrothers); roles.push(Role.ThreeBrothers); roles.push(Role.ThreeBrothers); }
   for (let i = 0; i < villagers; i++) roles.push(Role.Villager);
 
   return roles;
@@ -406,6 +451,16 @@ export function roleLabelFr(role: Role): string {
       return 'Bouc Emissaire';
     case Role.WildChild:
       return 'Enfant Sauvage';
+    case Role.Fox:
+      return 'Renard';
+    case Role.Pyromaniac:
+      return 'Pyromane';
+    case Role.BearTamer:
+      return 'Ours de Monsieur Ours';
+    case Role.TwoSisters:
+      return 'Deux S\u0153urs';
+    case Role.ThreeBrothers:
+      return 'Trois Fr\u00e8res';
     default:
       return role;
   }
@@ -450,6 +505,16 @@ export function rolePowerBlurb(role: Role): string {
       return 'Pouvoir entierement **passif** : en cas d\u2019**\u00e9galit\u00e9 au vote** du village, c\u2019est **toi** qui es \u00e9limin\u00e9 \u00e0 la place (avant le tirage au sort). Apres ta mort, tu **choisis qui pourra voter** lors du prochain vote (tu peux tout interdir ou tout autoriser).';
     case Role.WildChild:
       return 'La 1re nuit, tu choisis un **mod\u00e8le** parmi les joueurs vivants (dans ton fil priv\u00e9). Si ton mod\u00e8le meurt, tu te **transformes en Loup-Garou** et rejoins la meute. Tant que le mod\u00e8le est en vie, tu joues du c\u00f4t\u00e9 du village.';
+    case Role.Fox:
+      return 'Chaque nuit, tu flairer **3 joueurs** de ton choix. Le bot te r\u00e9pond **oui** (un loup est parmi eux) ou **non** (aucun loup). Si la r\u00e9ponse est **non**, tu **perds ton pouvoir** d\u00e9finitivement mais continues de jouer du c\u00f4t\u00e9 village.';
+    case Role.Pyromaniac:
+      return 'Camp **Solo**. Chaque nuit, tu **arroses** un joueur (ou toi-m\u00eame) d\u2019essence. Quand tu le d\u00e9cides (bouton **Incendier**), tu mets le feu \u2014 tous les joueurs arros\u00e9s encore en vie meurent simultan\u00e9ment. Tu gagnes **seul** si tu es le dernier survivant ou si tous les joueurs vivants (sauf toi) sont arros\u00e9s.';
+    case Role.BearTamer:
+      return 'R\u00f4le **entierement passif**. La nuit 1, 2 joueurs sont assign\u00e9s secrets comme tes **voisins** (tir\u00e9s au sort) — tu en seras inform\u00e9 dans ton fil priv\u00e9. \u00c0 chaque **aube**, si l\u2019un de tes voisins encore en vie est un **loup**, l\u2019ours grogne publiquement. Sinon, silence.';
+    case Role.TwoSisters:
+      return 'Vous \u00eates **2 joueuses** avec ce r\u00f4le. La **nuit 1**, vous vous reconnaissez dans un **fil priv\u00e9 partag\u00e9**. Pas de pouvoir actif : vous partagez simplement votre identit\u00e9. Vous gagnez avec le **camp Village**.';
+    case Role.ThreeBrothers:
+      return 'Vous \u00eates **3 joueurs** avec ce r\u00f4le. La **nuit 1**, vous vous reconnaissez dans un **fil priv\u00e9 partag\u00e9**. Pas de pouvoir actif : vous partagez simplement votre identit\u00e9. Vous gagnez avec le **camp Village**.';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:
@@ -510,7 +575,12 @@ export function formatCompositionReadable(
   if (c.includePiedPiper) lines.push(`• **${roleLabelFr(Role.PiedPiper)}** × **1** _(solo)_`);
   if (c.includeRustySwordKnight) lines.push(`• **${roleLabelFr(Role.RustySwordKnight)}** × **1**`);
   if (c.includeScapegoat) lines.push(`• **${roleLabelFr(Role.Scapegoat)}** × **1**`);
-  if (c.includeWildChild) lines.push(`• **${roleLabelFr(Role.WildChild)}** × **1**`);
+  if (c.includeWildChild) lines.push(`\u2022 **${roleLabelFr(Role.WildChild)}** \u00d7 **1**`);
+  if (c.includeFox) lines.push(`\u2022 **${roleLabelFr(Role.Fox)}** \u00d7 **1**`);
+  if (c.includePyromaniac) lines.push(`\u2022 **${roleLabelFr(Role.Pyromaniac)}** \u00d7 **1** _(solo)_`);
+  if (c.includeBearTamer) lines.push(`\u2022 **${roleLabelFr(Role.BearTamer)}** \u00d7 **1**`);
+  if (c.includeTwoSisters) lines.push(`\u2022 **${roleLabelFr(Role.TwoSisters)}** \u00d7 **2**`);
+  if (c.includeThreeBrothers) lines.push(`\u2022 **${roleLabelFr(Role.ThreeBrothers)}** \u00d7 **3**`);
   if (c.includeLittleGirl) {
     lines.push(`• **${roleLabelFr(Role.LittleGirl)}** × **1**`);
   }
@@ -555,6 +625,11 @@ export function formatCompositionReadable(
     `**Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e** : ${c.includeRustySwordKnight ? "**activ\u00e9** \u2014 1er loup alpha meurt si le chevalier est d\u00e9vor\u00e9" : "**d\u00e9sactiv\u00e9**"}`,
     `**Bouc \u00c9missaire** : ${c.includeScapegoat ? "**activ\u00e9** \u2014 meurt en cas d\u2019\u00e9galit\u00e9, choisit ensuite qui vote" : "**d\u00e9sactiv\u00e9**"}`,
     `**Enfant Sauvage** : ${c.includeWildChild ? "**activ\u00e9** \u2014 rejoint les loups si son mod\u00e8le meurt" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Renard** : ${c.includeFox ? "**activ\u00e9** \u2014 flairer 3 joueurs/nuit, perd le pouvoir si aucun loup parmi eux" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Pyromane** : ${c.includePyromaniac ? "**activ\u00e9** \u2014 arrose 1 joueur/nuit, incendie pour tuer tous les arros\u00e9s" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Ours de Monsieur Ours** : ${c.includeBearTamer ? "**activ\u00e9** \u2014 l'ours grogne \u00e0 l'aube si un voisin est loup" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Deux S\u0153urs** : ${c.includeTwoSisters ? "**activ\u00e9** \u2014 2 joueuses se reconnaissent nuit 1 (fil partag\u00e9)" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Trois Fr\u00e8res** : ${c.includeThreeBrothers ? "**activ\u00e9** \u2014 3 joueurs se reconnaissent nuit 1 (fil partag\u00e9)" : "**d\u00e9sactiv\u00e9**"}`,
     `**Grand M\u00e9chant Loup** : ${c.includeBigBadWolf ? "**activ\u00e9** \u2014 extra-kill tant qu\u2019aucun loup n\u2019est mort" : "**d\u00e9sactiv\u00e9**"}`,
     `**Égalité vote → tirage au sort** : ${c.tiebreakerRandom ? '**oui** — un ex-aequo éliminé aléatoirement' : 'non — personne ne meurt'}`,
     `**1re nuit sans meurtre** : ${c.skipFirstNightKill ? '**oui** \u2014 loups se r\u00e9unissent mais n\u2019\u00e9liminent personne nuit 1' : 'non'}`,

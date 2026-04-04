@@ -19,6 +19,11 @@ export enum Role {
   RustySwordKnight = 'RUSTY_SWORD_KNIGHT',
   Scapegoat = 'SCAPEGOAT',
   WildChild = 'WILD_CHILD',
+  Fox = 'FOX',
+  Pyromaniac = 'PYROMANIAC',
+  BearTamer = 'BEAR_TAMER',
+  TwoSisters = 'TWO_SISTERS',
+  ThreeBrothers = 'THREE_BROTHERS',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';
@@ -35,7 +40,9 @@ export type NightSubPhase =
   | 'bigbadwolf'
   | 'whitewolf'
   | 'piedpiper'
-  | 'wildchild';
+  | 'wildchild'
+  | 'fox'
+  | 'pyromaniac';
 
 export interface PlayerState {
   userId: string;

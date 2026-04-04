@@ -45,6 +45,10 @@ import { runBigBadWolfPhase } from '../bigbadwolf';
 import { runWhiteWolfPhase } from '../whiteWolf';
 import { runPiedPiperPhase } from '../piedPiper';
 import { runWildChildPhase, checkWildChildTransform } from '../wildChild';
+import { runFoxPhase } from '../fox';
+import { runPyromaniacPhase } from '../pyromaniac';
+import { initBearTamerNeighbors, checkBearTamerGrowl } from '../bearTamer';
+import { createSistersThread, createBrothersThread } from '../siblings';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import {
   sendDawnApproaching,
@@ -891,6 +895,31 @@ export async function runNightSequence(
     }
     await runWildChildPhase(client, session, textChannel);
 
+    // Nuit 1 : initialisation de l'Ours de Monsieur Ours
+    if (session.nightNumber === 1 && session.bearTamerId()) {
+      await initBearTamerNeighbors(client, session);
+    }
+
+    // Nuit 1 : cr\u00e9ation du fil des Deux S\u0153urs
+    if (session.nightNumber === 1 && session.sisterIds().length === 2) {
+      await sendNightBeat(
+        textChannel,
+        'Les Deux S\u0153urs se retrouvent\u2026',
+        'Les **Deux S\u0153urs** se reconnaissent dans un fil priv\u00e9 partag\u00e9 (nuit 1).'
+      );
+      await createSistersThread(client, session);
+    }
+
+    // Nuit 1 : cr\u00e9ation du fil des Trois Fr\u00e8res
+    if (session.nightNumber === 1 && session.brotherIds().length === 3) {
+      await sendNightBeat(
+        textChannel,
+        'Les Trois Fr\u00e8res se retrouvent\u2026',
+        'Les **Trois Fr\u00e8res** se reconnaissent dans un fil priv\u00e9 partag\u00e9 (nuit 1).'
+      );
+      await createBrothersThread(client, session);
+    }
+
     if (session.nightNumber === 1 && !session.cupidNightDone && session.cupidId()) {
       await sendNightBeat(
         textChannel,
@@ -979,7 +1008,26 @@ export async function runNightSequence(
     }
     await runPiedPiperPhase(client, session, textChannel);
 
+    if (session.foxId() && !session.foxLostPower) {
+      await sendNightBeat(
+        textChannel,
+        'Le Renard flaire\u2026',
+        'Le **Renard** choisit 3 joueurs \u00e0 flairer pour d\u00e9tecter d\u2019\u00e9ventuels loups parmi eux. _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runFoxPhase(client, session, textChannel);
+
+    if (session.pyromaniacId() && !session.pyromaniacIgnited) {
+      await sendNightBeat(
+        textChannel,
+        'Le Pyromane agit\u2026',
+        'Le **Pyromane** arrose un joueur \u2014 ou d\u00e9clenche l\u2019incendie. _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runPyromaniacPhase(client, session, textChannel);
+
     await sendDawnApproaching(textChannel, session);
+    await checkBearTamerGrowl(session, textChannel);
     await resolveNightDeaths(client, session, textChannel);
     await announceGossipSeerAtDawn(session, textChannel);
 

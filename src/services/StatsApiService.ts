@@ -4,7 +4,7 @@ import { statsApiBaseUrl, statsApiEnabled, statsApiSecret } from '../config';
 
 const FETCH_TIMEOUT_MS = 8_000;
 
-type WinSide = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper';
+type WinSide = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac';
 
 function winningUserIds(session: GameSession, win: WinSide): string[] {
   const players = [...session.players.values()];
@@ -26,6 +26,9 @@ function winningUserIds(session: GameSession, win: WinSide): string[] {
   }
   if (win === 'piedpiper') {
     return players.filter((p) => p.role === Role.PiedPiper).map((p) => p.userId);
+  }
+  if (win === 'pyromaniac') {
+    return players.filter((p) => p.role === Role.Pyromaniac).map((p) => p.userId);
   }
   const lg = session.loversGroup;
   if (lg && lg.length >= 2) {

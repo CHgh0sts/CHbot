@@ -36,6 +36,8 @@ export async function deleteAllGameThreads(
   const ids = [...session.secretThreads.values()];
   if (session.wolfPackThreadId) ids.push(session.wolfPackThreadId);
   if (session.loversThreadId) ids.push(session.loversThreadId);
+  if (session.sistersThreadId) ids.push(session.sistersThreadId);
+  if (session.brothersThreadId) ids.push(session.brothersThreadId);
   for (const id of ids) {
     const ch = await client.channels.fetch(id).catch(() => null);
     if (ch?.isThread()) {
@@ -45,6 +47,8 @@ export async function deleteAllGameThreads(
   session.secretThreads.clear();
   session.wolfPackThreadId = null;
   session.loversThreadId = null;
+  session.sistersThreadId = null;
+  session.brothersThreadId = null;
 }
 
 function canUsePostGameButtons(
@@ -57,7 +61,7 @@ function canUsePostGameButtons(
   return false;
 }
 
-export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper';
+export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac';
 
 /** Joueurs du camp victorieux (vivants ou morts), selon le rôle final en base. */
 function winningUserIds(session: GameSession, win: GameOverWin): string[] {
@@ -76,6 +80,9 @@ function winningUserIds(session: GameSession, win: GameOverWin): string[] {
   }
   if (win === 'piedpiper') {
     return players.filter((p) => p.role === Role.PiedPiper).map((p) => p.userId);
+  }
+  if (win === 'pyromaniac') {
+    return players.filter((p) => p.role === Role.Pyromaniac).map((p) => p.userId);
   }
   const lg = session.loversGroup;
   if (lg && lg.length >= 2) {
@@ -122,10 +129,12 @@ function buildSummaryField(session: GameSession, win: GameOverWin): string {
         : win === 'angel'
           ? '**Ange** (victoire solo au 1er vote)'
           : win === 'whitewerewolf'
-            ? '**Loup-Blanc** (solo \u2014 dernier survivant)'
+              ? '**Loup-Blanc** (solo \u2014 dernier survivant)'
             : win === 'piedpiper'
               ? '**Joueur de Fl\u00fbte** (solo \u2014 tous ensorcel\u00e9s)'
-              : '**Amoureux**';
+              : win === 'pyromaniac'
+                ? '**Pyromane** (solo \u2014 tous arros\u00e9s / incendi\u00e9s)'
+                : '**Amoureux**';
 
   const header = [
     `**Nuits** : **${nights}** · **Joueurs** : **${n}** · **Survivants** : **${aliveN}**`,
@@ -174,22 +183,32 @@ export async function presentGameOverPanel(
       ? '**Les Loups-Garous** remportent la partie.'
       : win === 'lovers'
         ? session.loversGroup && session.loversGroup.length >= 3
-          ? '**Le ménage à trois** remporte la partie (derniers survivants du lien).'
+          ? '**Le m\u00e9nage \u00e0 trois** remporte la partie (derniers survivants du lien).'
           : '**Les Amoureux** remportent la partie (derniers survivants ensemble).'
         : win === 'angel'
-          ? '**L’Ange** remporte la partie **seul·e** (éliminé·e au premier vote du village).'
-          : '**Le village** remporte la partie.';
+          ? '**L\u2019Ange** remporte la partie **seul\u00b7e** (\u00e9limin\u00e9\u00b7e au premier vote du village).'
+          : win === 'whitewerewolf'
+            ? '**Le Loup-Blanc** remporte la partie **seul** \u2014 dernier survivant !'
+            : win === 'piedpiper'
+              ? '**Le Joueur de Fl\u00fbte** a ensorcel\u00e9 tous les survivants \u2014 il remporte la partie **seul** !'
+              : win === 'pyromaniac'
+                ? '**Le Pyromane** a tout incendi\u00e9 \u2014 il remporte la partie **seul** !'
+                : '**Le village** remporte la partie.';
 
   const color =
     win === 'wolves'
       ? 0xed4245
       : win === 'lovers'
         ? 0xff69b4
-        : win === 'angel'
+        : win === 'angel' || win === 'whitewerewolf'
           ? 0xf1c40f
-          : 0x57f287;
+          : win === 'piedpiper'
+            ? 0x9b59b6
+            : win === 'pyromaniac'
+              ? 0xe74c3c
+              : 0x57f287;
 
-  const embed = new EmbedBuilder()
+    const embed = new EmbedBuilder()
     .setTitle('Partie terminée')
     .setDescription(
       `${desc}\n\nLes **fils privés** (joueurs + meute) ont été supprimés.`
@@ -376,3 +395,4 @@ export async function handleAfterGameClose(
     console.warn('[post-game] Suppression des salons de partie échouée :', e);
   }
 }
+

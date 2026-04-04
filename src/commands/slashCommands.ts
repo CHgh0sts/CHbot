@@ -175,6 +175,41 @@ export const slashCommands = [
         required: false,
       },
       {
+        name: 'renard',
+        description:
+          'Renard : oui = flairer 3 joueurs/nuit, perd son pouvoir si aucun loup parmi eux (camp Village)',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'pyromane',
+        description:
+          'Pyromane : oui = arrose 1 joueur/nuit, peut incendier tous les arros\u00e9s en une fois (camp Solo)',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'ours_monsieur_ours',
+        description:
+          "Ours de Monsieur Ours : oui = l'ours grogne \u00e0 l'aube si un voisin secret est un loup (passif, camp Village)",
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'deux_soeurs',
+        description:
+          'Deux S\u0153urs : oui = 2 joueuses se reconnaissent nuit 1 dans un fil partag\u00e9 (camp Village x2)',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'trois_freres',
+        description:
+          'Trois Fr\u00e8res : oui = 3 joueurs se reconnaissent nuit 1 dans un fil partag\u00e9 (camp Village x3)',
+        type: 5,
+        required: false,
+      },
+      {
         name: 'tiebreaker_random',
         description:
           '\u00c9galit\u00e9 au vote : oui = tirage au sort parmi les ex-aequo (non = personne ne meurt)',

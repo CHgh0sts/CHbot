@@ -46,6 +46,8 @@ import { fulfillWhiteWolf } from './game/whiteWolf';
 import { fulfillPiedPiper } from './game/piedPiper';
 import { fulfillWildChild } from './game/wildChild';
 import { fulfillScapegoat } from './game/scapegoat';
+import { fulfillFox } from './game/fox';
+import { fulfillPyromaniac, fulfillPyromaniacIgnite } from './game/pyromaniac';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -191,6 +193,11 @@ client.on(Events.MessageCreate, async (message) => {
         includeRustySwordKnight: null,
         includeScapegoat: null,
         includeWildChild: null,
+        includeFox: null,
+        includePyromaniac: null,
+        includeBearTamer: null,
+        includeTwoSisters: null,
+        includeThreeBrothers: null,
         tiebreakerRandom: null,
         skipFirstNightKill: null,
         revealDeadRoles: null,
@@ -389,6 +396,11 @@ async function handleSlash(
       includeRustySwordKnight: interaction.options.getBoolean('chevalier_rouilee'),
       includeScapegoat: interaction.options.getBoolean('bouc_emissaire'),
       includeWildChild: interaction.options.getBoolean('enfant_sauvage'),
+      includeFox: interaction.options.getBoolean('renard'),
+      includePyromaniac: interaction.options.getBoolean('pyromane'),
+      includeBearTamer: interaction.options.getBoolean('ours_monsieur_ours'),
+      includeTwoSisters: interaction.options.getBoolean('deux_soeurs'),
+      includeThreeBrothers: interaction.options.getBoolean('trois_freres'),
       tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
       skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
@@ -591,6 +603,18 @@ async function handleSelect(
     if (interaction.user.id !== sgId) return;
     fulfillScapegoat(channelId, target);
   }
+
+  if (kind === 'fox') {
+    const foxId = session.foxId();
+    if (interaction.user.id !== foxId) return;
+    fulfillFox(channelId, target);
+  }
+
+  if (kind === 'pyromaniac') {
+    const pyroId = session.pyromaniacId();
+    if (interaction.user.id !== pyroId) return;
+    fulfillPyromaniac(channelId, target);
+  }
 }
 
 async function handleButton(
@@ -752,6 +776,13 @@ async function handleButton(
     )?.userId;
     if (interaction.user.id !== sgId) return;
     fulfillScapegoat(channelId, 'skip');
+  }
+
+  if (parts[2] === 'pyromaniac' && parts[3] === 'ignite') {
+    const pyroId = session.pyromaniacId();
+    if (interaction.user.id !== pyroId) return;
+    await interaction.deferUpdate().catch(() => null);
+    fulfillPyromaniacIgnite(channelId);
   }
 }
 

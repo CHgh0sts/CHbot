@@ -557,6 +557,11 @@ export async function runLgConfig(
     options.includeRustySwordKnight !== null ||
     options.includeScapegoat !== null ||
     options.includeWildChild !== null ||
+    options.includeFox !== null ||
+    options.includePyromaniac !== null ||
+    options.includeBearTamer !== null ||
+    options.includeTwoSisters !== null ||
+    options.includeThreeBrothers !== null ||
     options.tiebreakerRandom !== null ||
     options.skipFirstNightKill !== null ||
     options.revealDeadRoles !== null ||
@@ -628,6 +633,11 @@ export async function runLgConfig(
   if (options.includeRustySwordKnight !== null) c.includeRustySwordKnight = options.includeRustySwordKnight;
   if (options.includeScapegoat !== null) c.includeScapegoat = options.includeScapegoat;
   if (options.includeWildChild !== null) c.includeWildChild = options.includeWildChild;
+  if (options.includeFox !== null) c.includeFox = options.includeFox;
+  if (options.includePyromaniac !== null) c.includePyromaniac = options.includePyromaniac;
+  if (options.includeBearTamer !== null) c.includeBearTamer = options.includeBearTamer;
+  if (options.includeTwoSisters !== null) c.includeTwoSisters = options.includeTwoSisters;
+  if (options.includeThreeBrothers !== null) c.includeThreeBrothers = options.includeThreeBrothers;
   if (options.tiebreakerRandom !== null) c.tiebreakerRandom = options.tiebreakerRandom;
   if (options.skipFirstNightKill !== null) c.skipFirstNightKill = options.skipFirstNightKill;
   if (options.revealDeadRoles !== null) c.revealDeadRoles = options.revealDeadRoles;
@@ -659,7 +669,12 @@ export async function runLgConfig(
     options.includePiedPiper !== null ||
     options.includeRustySwordKnight !== null ||
     options.includeScapegoat !== null ||
-    options.includeWildChild !== null;
+    options.includeWildChild !== null ||
+    options.includeFox !== null ||
+    options.includePyromaniac !== null ||
+    options.includeBearTamer !== null ||
+    options.includeTwoSisters !== null ||
+    options.includeThreeBrothers !== null;
 
   if (options.villageoisAuto === true) {
     c.villagerCount = null;

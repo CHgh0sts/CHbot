@@ -25,6 +25,11 @@ const ROLE_IMAGE_BASENAMES: Record<Role, string[]> = {
   [Role.RustySwordKnight]: ['chevalier_epee_rouilee', 'chevalier_rouilee', 'rusty_sword_knight', 'knight'],
   [Role.Scapegoat]: ['bouc_emissaire', 'bouc', 'scapegoat'],
   [Role.WildChild]: ['enfant_sauvage', 'wild_child', 'wildchild'],
+  [Role.Fox]: ['renard', 'fox'],
+  [Role.Pyromaniac]: ['pyromane', 'pyromaniac'],
+  [Role.BearTamer]: ['ours', 'bear_tamer', 'beartamer'],
+  [Role.TwoSisters]: ['deux_soeurs', 'two_sisters'],
+  [Role.ThreeBrothers]: ['trois_freres', 'three_brothers'],
 };
 
 const EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'] as const;

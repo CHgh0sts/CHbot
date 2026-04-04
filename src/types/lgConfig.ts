@@ -20,6 +20,11 @@ export interface LgConfigOptions {
   includeRustySwordKnight: boolean | null;
   includeScapegoat: boolean | null;
   includeWildChild: boolean | null;
+  includeFox: boolean | null;
+  includePyromaniac: boolean | null;
+  includeBearTamer: boolean | null;
+  includeTwoSisters: boolean | null;
+  includeThreeBrothers: boolean | null;
   tiebreakerRandom: boolean | null;
   skipFirstNightKill: boolean | null;
   revealDeadRoles: boolean | null;

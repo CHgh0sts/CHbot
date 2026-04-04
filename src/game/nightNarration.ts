@@ -105,6 +105,26 @@ export function buildNightRoadmap(session: GameSession): string {
     );
   }
 
+  if (session.nightNumber === 1 && session.sisterIds().length === 2) {
+    lines.push(`${i++}. **Deux S\u0153urs** \u2014 se reconnaissent dans un fil partag\u00e9 (nuit 1)`);
+  }
+
+  if (session.nightNumber === 1 && session.brotherIds().length === 3) {
+    lines.push(`${i++}. **Trois Fr\u00e8res** \u2014 se reconnaissent dans un fil partag\u00e9 (nuit 1)`);
+  }
+
+  if (session.foxId() && !session.foxLostPower) {
+    lines.push(`${i++}. **Renard** \u2014 flairer 3 joueurs (loup parmi eux ?) _\u00b7 fil priv\u00e9_`);
+  }
+
+  if (session.pyromaniacId() && !session.pyromaniacIgnited) {
+    lines.push(`${i++}. **Pyromane** \u2014 arroser ou d\u00e9clencher l\u2019incendie _\u00b7 fil priv\u00e9_`);
+  }
+
+  if (session.bearTamerId()) {
+    lines.push(`_(passif) **Ours de Monsieur Ours** \u2014 l\u2019ours grognera \u00e0 l\u2019aube si un voisin est loup_`);
+  }
+
   const beforeAube = lines.length;
   lines.push(`${i}. **Aube** — révélation des morts et suite de la partie`);
 

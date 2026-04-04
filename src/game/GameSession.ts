@@ -118,6 +118,22 @@ export class GameSession {
   /** IDs des joueurs interdits de vote au prochain tour (choix du Bouc Émissaire). */
   scapegoatVoteBannedIds: Set<string> = new Set();
 
+  /** `true` si le Renard a perdu son pouvoir (a flair\u00e9 sans trouver de loup). */
+  foxLostPower = false;
+
+  /** IDs des joueurs arros\u00e9s par le Pyromane (pr\u00eats \u00e0 \u00eatre incendi\u00e9s). */
+  pyromaniacDousedIds: Set<string> = new Set();
+  /** `true` une fois que le Pyromane a d\u00e9clench\u00e9 l\u2019incendie. */
+  pyromaniacIgnited = false;
+
+  /** IDs des 2 voisins secrets de l\u2019Ours de Monsieur Ours (assign\u00e9s nuit 1). */
+  bearTamerNeighborIds: string[] = [];
+
+  /** Fil priv\u00e9 partag\u00e9 par les Deux S\u0153urs. */
+  sistersThreadId: string | null = null;
+  /** Fil priv\u00e9 partag\u00e9 par les Trois Fr\u00e8res. */
+  brothersThreadId: string | null = null;
+
   /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
    * Inchangé si le garde n’a pas joué (timeout).
@@ -297,6 +313,39 @@ export class GameSession {
     return p?.userId;
   }
 
+  foxId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.Fox && x.alive
+    );
+    return p?.userId;
+  }
+
+  pyromaniacId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.Pyromaniac && x.alive
+    );
+    return p?.userId;
+  }
+
+  bearTamerId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.BearTamer && x.alive
+    );
+    return p?.userId;
+  }
+
+  sisterIds(): string[] {
+    return [...this.players.values()]
+      .filter((x) => x.role === Role.TwoSisters && x.alive)
+      .map((x) => x.userId);
+  }
+
+  brotherIds(): string[] {
+    return [...this.players.values()]
+      .filter((x) => x.role === Role.ThreeBrothers && x.alive)
+      .map((x) => x.userId);
+  }
+
   getPlayer(userId: string): PlayerState | undefined {
     return this.players.get(userId);
   }
@@ -324,39 +373,50 @@ export class GameSession {
    * Les **Amoureux** gagnent s’ils sont **seuls** derniers survivants du lien
    * (couple ou ménage à trois). Sinon règle loups / village.
    */
-  checkVictory(): 'wolves' | 'village' | 'lovers' | null {
+  checkVictory(): 'wolves' | 'village' | 'lovers' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac' | null {
     const alive = this.alivePlayers();
     const aliveIds = new Set(alive.map((p) => p.userId));
+
+    // Loup-Blanc solo : dernier survivant
+    const wwId = this.whiteWerewolfId();
+    if (wwId && alive.length === 1 && alive[0]!.userId === wwId) return 'whitewerewolf';
+
+    // Pyromane solo : dernier survivant OU tous les autres sont arros\u00e9s
+    const pyroId = this.pyromaniacId();
+    if (pyroId) {
+      if (alive.length === 1 && alive[0]!.userId === pyroId) return 'pyromaniac';
+      if (this.pyromaniacDousedIds.size > 0) {
+        const nonPyro = alive.filter((p) => p.userId !== pyroId);
+        if (nonPyro.length > 0 && nonPyro.every((p) => this.pyromaniacDousedIds.has(p.userId))) return 'pyromaniac';
+      }
+    }
+
+    // Joueur de Fl\u00fbte solo : tous les vivants (sauf lui) sont ensorcel\u00e9s
+    const piperId = this.piedPiperId();
+    if (piperId && this.enchantedPlayerIds.size > 0) {
+      const nonPiper = alive.filter((p) => p.userId !== piperId);
+      if (nonPiper.length > 0 && nonPiper.every((p) => this.enchantedPlayerIds.has(p.userId))) return 'piedpiper';
+    }
 
     if (this.loversGroup && this.loversGroup.length >= 2) {
       const lg = this.loversGroup;
       const loversAlive = lg.filter((id) => aliveIds.has(id));
-      if (
-        loversAlive.length === lg.length &&
-        alive.length === lg.length
-      ) {
-        return 'lovers';
-      }
+      if (loversAlive.length === lg.length && alive.length === lg.length) return 'lovers';
     }
 
     if (alive.length === 2) {
       const a = alive[0]!;
       const b = alive[1]!;
-      if (
-        a.loverUserId === b.userId &&
-        b.loverUserId === a.userId
-      ) {
-        return 'lovers';
-      }
+      if (a.loverUserId === b.userId && b.loverUserId === a.userId) return 'lovers';
     }
+
     const w = this.countAliveWolves();
     const v = this.countAliveNonWolves();
     if (w === 0) return 'village';
     if (w >= v && w > 0) return 'wolves';
     return null;
   }
-
-  assignRolesFromLobby(): void {
+    assignRolesFromLobby(): void {
     const sortedIds = [...this.lobbyPlayers].sort((a, b) => {
       try {
         const da = BigInt(a);
@@ -413,6 +473,12 @@ export class GameSession {
     this.enchantedPlayerIds = new Set();
     this.rustKillPending = false;
     this.scapegoatVoteBannedIds = new Set();
+    this.foxLostPower = false;
+    this.pyromaniacDousedIds = new Set();
+    this.pyromaniacIgnited = false;
+    this.bearTamerNeighborIds = [];
+    this.sistersThreadId = null;
+    this.brothersThreadId = null;
   }
 
   async hydrateDisplayNames(client: Client): Promise<void> {
@@ -451,3 +517,4 @@ export class GameSession {
     return roleLabelFr(role);
   }
 }
+
