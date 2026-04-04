@@ -360,6 +360,21 @@ const ROLE_INFO: Record<string, RoleInfo> = {
     victory: 'Gagne avec le **camp choisi** (Village ou Loups).',
     tip: 'Si vous choisissez les Loups, gardez un comportement villageois le jour. Votre avantage : le village vous fait confiance.',
   },
+  hackeur: {
+    name: 'Hackeur',
+    emoji: '\uD83D\uDCBB',
+    camp: 'Village',
+    campColor: 0x1abc9c,
+    power:
+      'La **nuit 1**, le Hackeur choisit secr\u00e8tement un joueur \u00e0 **pirater**. ' +
+      'Lorsque ce joueur meurt, son r\u00f4le n\u2019est **pas r\u00e9v\u00e9l\u00e9** publiquement (annonce : \u201cpir\u00e1t\u00e9 par le Hackeur\u201d). ' +
+      'Le Hackeur **h\u00e9rite secr\u00e8tement** du r\u00f4le, du camp et des pouvoirs de sa victime (version neuve). ' +
+      'Avant ce vol, la Voyante le per\u00e7oit comme un **r\u00f4le village al\u00e9atoire** parmi ceux pr\u00e9sents dans la partie. ' +
+      'Apr\u00e8s le vol, la Voyante voit le **vrai r\u00f4le vol\u00e9**.',
+    timing: 'Nuit 1 uniquement (choix de cible), en fil priv\u00e9. Ensuite passif jusqu\u2019\u00e0 la mort de la cible.',
+    victory: 'Gagne avec le **camp de son r\u00f4le vol\u00e9** (Village avant vol). Si sa cible ne meurt jamais, il gagne avec le Village.',
+    tip: 'Ciblez un r\u00f4le puissant (Voyante, Sorci\u00e8re, Loup-Garou\u2026) pour maximiser votre impact. Le village ne saura jamais ce que vous \u00eates devenu.',
+  },
   dictateur: {
     name: 'Dictateur',
     emoji: '\uD83D\uDC51',

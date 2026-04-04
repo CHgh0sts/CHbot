@@ -158,6 +158,14 @@ export class GameSession {
   dictateurUsed = false;
   /** ID du joueur qui poss\u00e8de le titre de Maire (double poids au vote). */
   mayorId: string | null = null;
+  /** ID du Hackeur (permanent m\u00eame apr\u00e8s changement de r\u00f4le). */
+  hackeurPlayerId: string | null = null;
+  /** Cible choisie par le Hackeur en nuit 1. */
+  hackeurTargetId: string | null = null;
+  /** true une fois que le Hackeur a vol\u00e9 le r\u00f4le de sa cible. */
+  hackeurHasStolen = false;
+  /** R\u00f4le vol\u00e9 (pour traçabilit\u00e9 post-game). */
+  hackeurStolenRole: Role | null = null;
 
   /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
@@ -400,6 +408,46 @@ export class GameSession {
     return [...this.players.values()].find((x) => x.role === Role.Dictateur && x.alive)?.userId;
   }
 
+  /** Retourne toujours l\u2019ID du Hackeur (m\u00eame apr\u00e8s vol de r\u00f4le). */
+  hackeurId(): string | undefined {
+    return this.hackeurPlayerId ?? undefined;
+  }
+
+  /**
+   * Retourne le r\u00f4le apparent d\u2019un joueur.
+   * Pour le Hackeur avant vol : retourne un r\u00f4le village al\u00e9atoire de la composition.
+   * Dans tous les autres cas : retourne le r\u00f4le r\u00e9el.
+   */
+  getPlayerApparentRole(playerId: string): Role {
+    const p = this.getPlayer(playerId);
+    if (!p) return Role.Villager;
+    if (playerId !== this.hackeurPlayerId || this.hackeurHasStolen) {
+      return p.role;
+    }
+    const villageRoles: Role[] = [Role.Villager];
+    const c = this.compositionConfig;
+    if (c.includeSeer) villageRoles.push(Role.Seer);
+    if (c.includeWitch) villageRoles.push(Role.Witch);
+    if (c.includeHunter) villageRoles.push(Role.Hunter);
+    if (c.includeCupid) villageRoles.push(Role.Cupid);
+    if (c.includeGuard) villageRoles.push(Role.Guard);
+    if (c.includeThief) villageRoles.push(Role.Thief);
+    if (c.includeAngel) villageRoles.push(Role.Angel);
+    if (c.includeRaven) villageRoles.push(Role.Raven);
+    if (c.includeFoolOfVillage) villageRoles.push(Role.FoolOfVillage);
+    if (c.includeElder) villageRoles.push(Role.Elder);
+    if (c.includeScapegoat) villageRoles.push(Role.Scapegoat);
+    if (c.includeWildChild) villageRoles.push(Role.WildChild);
+    if (c.includeBearTamer) villageRoles.push(Role.BearTamer);
+    if (c.includeTwoSisters) villageRoles.push(Role.TwoSisters);
+    if (c.includeThreeBrothers) villageRoles.push(Role.ThreeBrothers);
+    if (c.includeDocteur) villageRoles.push(Role.Docteur);
+    if (c.includeNecromancer) villageRoles.push(Role.Necromancer);
+    if (c.includeDevotedServant) villageRoles.push(Role.DevotedServant);
+    if (c.includeDictateur) villageRoles.push(Role.Dictateur);
+    return villageRoles[Math.floor(Math.random() * villageRoles.length)]!;
+  }
+
   getPlayer(userId: string): PlayerState | undefined {
     return this.players.get(userId);
   }
@@ -550,6 +598,11 @@ export class GameSession {
     this.dogWolfChoseSide = false;
     this.dictateurUsed = false;
     this.mayorId = null;
+
+    this.hackeurPlayerId = [...this.players.values()].find((p) => p.role === Role.Hackeur)?.userId ?? null;
+    this.hackeurTargetId = null;
+    this.hackeurHasStolen = false;
+    this.hackeurStolenRole = null;
   }
 
   async hydrateDisplayNames(client: Client): Promise<void> {
@@ -588,6 +641,7 @@ export class GameSession {
     return roleLabelFr(role);
   }
 }
+
 
 
 

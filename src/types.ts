@@ -31,6 +31,7 @@ export enum Role {
   InfectFather = 'INFECT_FATHER',
   DogWolf = 'DOG_WOLF',
   Dictateur = 'DICTATEUR',
+  Hackeur = 'HACKEUR',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';
@@ -53,7 +54,8 @@ export type NightSubPhase =
   | 'docteur'
   | 'sectarian'
   | 'infectfather'
-  | 'dogwolf';
+  | 'dogwolf'
+  | 'hackeur';
 
 export interface PlayerState {
   userId: string;

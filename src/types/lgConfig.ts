@@ -32,6 +32,7 @@ export interface LgConfigOptions {
   includeInfectFather: boolean | null;
   includeDogWolf: boolean | null;
   includeDictateur: boolean | null;
+  includeHackeur: boolean | null;
   tiebreakerRandom: boolean | null;
   skipFirstNightKill: boolean | null;
   revealDeadRoles: boolean | null;

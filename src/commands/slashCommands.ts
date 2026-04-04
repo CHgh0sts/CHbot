@@ -252,6 +252,12 @@ export const slashCommands = [
         required: false,
       },
       {
+        name: 'hackeur',
+        description: 'Hackeur : oui = vole le rôle de sa cible nuit 1 (invisible Voyante avant vol)',
+        type: 5,
+        required: false,
+      },
+      {
         name: 'tiebreaker_random',
         description:
           '\u00c9galit\u00e9 au vote : oui = tirage au sort parmi les ex-aequo (non = personne ne meurt)',
@@ -394,6 +400,7 @@ export const slashCommands = [
           { name: 'Infect P\u00e8re des Loups',        value: 'infect_pere' },
           { name: 'Chien-Loup',                         value: 'chien_loup' },
           { name: 'Dictateur',                          value: 'dictateur' },
+          { name: 'Hackeur',                            value: 'hackeur' },
         ],
       },
     ],

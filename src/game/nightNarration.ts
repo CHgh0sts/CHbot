@@ -157,6 +157,12 @@ export function buildNightRoadmap(session: GameSession): string {
     lines.push(`_(passif/jour) **Dictateur** \u2014 avant le vote du village, peut s\u2019imposer et d\u00e9signer lui-m\u00eame la victime (1 fois par partie)_`);
   }
 
+  if (session.hackeurId() && !session.hackeurTargetId) {
+    lines.push(`_(nuit 1) **Hackeur** \u2014 choisit sa cible \u00e0 pirater (r\u00f4le h\u00e9rit\u00e9 \u00e0 sa mort)_`);
+  } else if (session.hackeurId() && session.hackeurTargetId && !session.hackeurHasStolen) {
+    lines.push(`_(passif) **Hackeur** \u2014 attend la mort de sa cible pour voler son r\u00f4le_`);
+  }
+
   const beforeAube = lines.length;
   lines.push(`${i}. **Aube** — révélation des morts et suite de la partie`);
 

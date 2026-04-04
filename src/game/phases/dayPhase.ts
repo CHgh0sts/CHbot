@@ -39,6 +39,7 @@ import { checkWildChildTransform } from '../wildChild';
 import { addDeadToNecromancerThread } from '../necromancer';
 import { runDevotedServantChoice } from '../devotedServant';
 import { runDictateurPhase } from '../dictateur';
+import { processHackeurTargetDeath } from '../hackeur';
 
 function voteKey(channelId: string, voterId: string): string {
   return `${channelId}:vote:${voterId}`;
@@ -154,8 +155,9 @@ export async function startDayPhase(
         [dictImposed]
       );
       for (const id of dictFinalDeaths) {
+        const hacked = await processHackeurTargetDeath(client, session, textChannel, id);
         session.kill(id);
-        await addDeadToNecromancerThread(client, session, id);
+        if (!hacked) await addDeadToNecromancerThread(client, session, id);
       }
       if (dictFinalDeaths.length > 0) {
         await demotePlayersToStageAudience(textChannel.guild, session, dictFinalDeaths);
@@ -341,6 +343,7 @@ export async function startDayPhase(
 
       // Bouc \u00c9missaire : sacrifice lors d\u2019\u00e9galit\u00e9
       if (scapegoatTriggered) {
+        await processHackeurTargetDeath(client, session, textChannel, victim);
         session.kill(victim);
         await addDeadToNecromancerThread(client, session, victim);
         await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
@@ -367,6 +370,7 @@ export async function startDayPhase(
       }
 
       if (isFirstVillageVote && victimPlayer?.role === Role.Angel) {
+        await processHackeurTargetDeath(client, session, textChannel, victim);
         session.kill(victim);
         await addDeadToNecromancerThread(client, session, victim);
         await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
@@ -459,9 +463,11 @@ export async function startDayPhase(
 
       const actualDayDeaths: string[] = [];
       for (const id of finalDeaths) {
+        // Hackeur : vol de r\u00f4le avant kill
+        const hacked = await processHackeurTargetDeath(client, session, textChannel, id);
         session.kill(id);
         actualDayDeaths.push(id);
-        await addDeadToNecromancerThread(client, session, id);
+        if (!hacked) await addDeadToNecromancerThread(client, session, id);
       }
       if (actualDayDeaths.length > 0) {
         await demotePlayersToStageAudience(

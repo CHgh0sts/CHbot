@@ -54,6 +54,7 @@ import { initNecromancerThread, addDeadToNecromancerThread } from '../necromance
 import { initSectarianGroups, runSectarianPhase } from '../sectarian';
 import { runInfectFatherPhase } from '../infectFather';
 import { runDogWolfPhase } from '../dogWolf';
+import { runHackeurPhase, processHackeurTargetDeath } from '../hackeur';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import {
   sendDawnApproaching,
@@ -341,6 +342,9 @@ export async function runSeerPhase(
   const target = session.getPlayer(picked);
   if (!target) return;
 
+  // Utiliser le r\u00f4le apparent (tient compte du Hackeur avant vol)
+  const apparentRole = session.getPlayerApparentRole(picked);
+
   if (gossip) {
     session.gossipSeerNightTargetId = picked;
     await sendInPlayerSecretThread(client, session, seerId, {
@@ -348,13 +352,13 @@ export async function runSeerPhase(
         new EmbedBuilder()
           .setTitle('Observation enregistrée')
           .setDescription(
-            `Cible : **${target.displayName}** — rôle : **${roleLabelFr(target.role)}**.\n\n_Resté **confidentiel** tant que cette personne est **vivante** ; si elle meurt, son rôle pourra apparaître **uniquement** dans le message d’**annonce de mort**, selon la config (nuit sombre / révélation des morts)._`
+            `Cible : **${target.displayName}** — rôle : **${roleLabelFr(apparentRole)}**.\n\n_Resté **confidentiel** tant que cette personne est **vivante** ; si elle meurt, son rôle pourra apparaître **uniquement** dans le message d’**annonce de mort**, selon la config (nuit sombre / révélation des morts)._`
           )
           .setColor(0x9b59b6),
       ],
     });
   } else {
-    const isWolf = target.role === Role.Werewolf;
+    const isWolf = session.isWolfRole(apparentRole);
     await sendInPlayerSecretThread(client, session, seerId, {
       embeds: [
         new EmbedBuilder()
@@ -810,10 +814,13 @@ export async function resolveNightDeaths(
   for (const id of finalIds) {
     const p = session.getPlayer(id);
     if (!p) continue;
+    // Hackeur : vol de r\u00f4le avant kill (r\u00f4le encore accessible)
+    const hacked = await processHackeurTargetDeath(client, session, textChannel, id);
     session.kill(id);
     actualDeadIds.push(id);
     names.push(p.displayName ?? `<@${id}>`);
-    await addDeadToNecromancerThread(client, session, id);
+    // necromancer thread d\u00e9j\u00e0 appel\u00e9 dans processHackeurTargetDeath si hack\u00e9
+    if (!hacked) await addDeadToNecromancerThread(client, session, id);
   }
 
   if (actualDeadIds.length > 0) {
@@ -928,6 +935,16 @@ export async function runNightSequence(
         'Le **Chien-Loup** choisit son camp cette nuit (Village ou Loups). _\u00b7 fil priv\u00e9._'
       );
       await runDogWolfPhase(client, session, textChannel);
+    }
+
+    // Nuit 1 : Hackeur choisit sa cible
+    if (session.nightNumber === 1 && session.hackeurId()) {
+      await sendNightBeat(
+        textChannel,
+        'Le Hackeur programme son piratage\u2026',
+        'Le **Hackeur** choisit un joueur \u00e0 pirater. _\u00b7 fil priv\u00e9._'
+      );
+      await runHackeurPhase(client, session, textChannel);
     }
 
     // Nuit 1 : cr\u00e9ation du fil des Deux S\u0153urs
@@ -1142,6 +1159,7 @@ export function fulfillWitchSave(channelId: string, choice: 'yes' | 'no'): boole
 export function fulfillWitchKill(channelId: string, targetOrSkip: string): boolean {
   return fulfillPending(witchKillKey(channelId), targetOrSkip);
 }
+
 
 
 

@@ -72,6 +72,8 @@ export interface CompositionConfig {
   includeDogWolf: boolean;
   /** **Dictateur** : camp Village. Une fois par partie, peut interrompre le vote du village et désigner lui-même la victime. S'il cible un ennemi (loup/solo), il survit et devient Maire. Sinon, il meurt. */
   includeDictateur: boolean;
+  /** **Hackeur** : camp Village. Nuit 1, cible un joueur. À sa mort, le rôle n'est pas révélé et le Hackeur vole secrètement ce rôle (camp + pouvoirs). La Voyante voit un rôle village aléatoire avant le vol. */
+  includeHackeur: boolean;
   /** **Tirage au sort en cas d'égalité** au vote du village : un ex-aequo est éliminé aléatoirement (sinon personne ne meurt). */
   tiebreakerRandom: boolean;
   /** **Première nuit sans meurtre** : les loups se réunissent mais n'éliminent personne la nuit 1. */
@@ -131,6 +133,7 @@ export function fixedCompositionTotal(c: CompositionConfig): number | null {
   if (c.includeInfectFather) fixed++;
   if (c.includeDogWolf) fixed++;
   if (c.includeDictateur) fixed++;
+  if (c.includeHackeur) fixed++;
   return w + fixed + c.villagerCount;
 }
 
@@ -168,6 +171,7 @@ export function villagerCountToMatchMinPlayers(c: CompositionConfig): number {
   if (c.includeInfectFather) fixed++;
   if (c.includeDogWolf) fixed++;
   if (c.includeDictateur) fixed++;
+  if (c.includeHackeur) fixed++;
   return Math.max(0, c.minPlayers - w - fixed);
 }
 
@@ -204,6 +208,7 @@ export function defaultCompositionConfig(): CompositionConfig {
   const includeInfectFather = false;
   const includeDogWolf = false;
   const includeDictateur = false;
+  const includeHackeur = false;
   const tiebreakerRandom = false;
   const skipFirstNightKill = false;
   const revealDeadRoles = true;
@@ -244,6 +249,7 @@ export function defaultCompositionConfig(): CompositionConfig {
     includeInfectFather,
     includeDogWolf,
     includeDictateur,
+    includeHackeur,
     tiebreakerRandom,
     skipFirstNightKill,
     revealDeadRoles,
@@ -294,6 +300,7 @@ export function cloneCompositionConfig(c: CompositionConfig): CompositionConfig 
     includeInfectFather: c.includeInfectFather,
     includeDogWolf: c.includeDogWolf,
     includeDictateur: c.includeDictateur,
+    includeHackeur: c.includeHackeur,
     tiebreakerRandom: c.tiebreakerRandom,
     skipFirstNightKill: c.skipFirstNightKill,
     revealDeadRoles: c.revealDeadRoles,
@@ -394,6 +401,7 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeInfectFather) roles.push(Role.InfectFather);
   if (config.includeDogWolf) roles.push(Role.DogWolf);
   if (config.includeDictateur) roles.push(Role.Dictateur);
+  if (config.includeHackeur) roles.push(Role.Hackeur);
   for (let i = 0; i < villagers; i++) roles.push(Role.Villager);
 
   return roles;
@@ -531,6 +539,8 @@ export function roleLabelFr(role: Role): string {
       return 'Chien-Loup';
     case Role.Dictateur:
       return 'Dictateur';
+    case Role.Hackeur:
+      return 'Hackeur';
     default:
       return role;
   }
@@ -599,6 +609,8 @@ export function rolePowerBlurb(role: Role): string {
       return 'Camp **Sp\u00e9cial**. La **nuit 1**, vous choisissez votre camp : **Village** (vous jouez comme villageois) ou **Loups** (vous rejoignez la meute secr\u00e8tement dans le fil Meute). Le village ne sait pas quel camp vous avez choisi.';
     case Role.Dictateur:
       return '**Une fois par partie**, pendant le vote du village, vous pouvez vous **r\u00e9v\u00e9ler** et **imposer** votre propre choix \u2014 la victime est d\u00e9sign\u00e9e par vous seul. Si elle est un **ennemi** (loup, solo\u2026), vous survivez et devenez **Maire** (double vote). Si vous vous **trompez** (villageois innocent), vous **mourez** imm\u00e9diatement.';
+    case Role.Hackeur:
+      return 'Camp **Village**. La **nuit 1**, vous ciblez secr\u00e8tement un joueur. Lorsqu\u2019il mourra, son r\u00f4le n\u2019est **pas r\u00e9v\u00e9l\u00e9** publiquement : vous **h\u00e9ritez** de son r\u00f4le, de son camp et de ses pouvoirs. Avant ce vol, la Voyante vous per\u00e7oit comme un **r\u00f4le village al\u00e9atoire**.';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:
@@ -672,6 +684,7 @@ export function formatCompositionReadable(
   if (c.includeInfectFather) lines.push(`\u2022 **${roleLabelFr(Role.InfectFather)}** \u00d7 **1** _(loup)_`);
   if (c.includeDogWolf) lines.push(`\u2022 **${roleLabelFr(Role.DogWolf)}** \u00d7 **1**`);
   if (c.includeDictateur) lines.push(`\u2022 **${roleLabelFr(Role.Dictateur)}** \u00d7 **1**`);
+  if (c.includeHackeur) lines.push(`\u2022 **${roleLabelFr(Role.Hackeur)}** \u00d7 **1**`);
   if (c.includeLittleGirl) {
     lines.push(`• **${roleLabelFr(Role.LittleGirl)}** × **1**`);
   }
@@ -738,6 +751,7 @@ export function formatCompositionReadable(
     `**Annonce des morts** : ${shouldRevealDeadRoles(c) ? 'rôle affiché publiquement' : c.darkNightMode ? 'rôle **jamais** public (nuit sombre)' : 'rôle masqué (seulement la mention)'}`,
   ].join('\n');
 }
+
 
 
 

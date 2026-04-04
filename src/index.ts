@@ -55,6 +55,7 @@ import { fulfillDevotedServant } from './game/devotedServant';
 import { fulfillInfectFather } from './game/infectFather';
 import { fulfillDogWolf } from './game/dogWolf';
 import { fulfillDictateurTrigger, fulfillDictateurPick } from './game/dictateur';
+import { fulfillHackeur } from './game/hackeur';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -212,6 +213,7 @@ client.on(Events.MessageCreate, async (message) => {
         includeInfectFather: null,
         includeDogWolf: null,
         includeDictateur: null,
+        includeHackeur: null,
         tiebreakerRandom: null,
         skipFirstNightKill: null,
         revealDeadRoles: null,
@@ -427,6 +429,7 @@ async function handleSlash(
       includeInfectFather: interaction.options.getBoolean('infect_pere_loups'),
       includeDogWolf: interaction.options.getBoolean('chien_loup'),
       includeDictateur: interaction.options.getBoolean('dictateur'),
+      includeHackeur: interaction.options.getBoolean('hackeur'),
       tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
       skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
@@ -655,6 +658,11 @@ async function handleSelect(
   if (kind === 'dictateur' && parts[3] === 'pick') {
     if (interaction.user.id !== session.dictateurId()) return;
     fulfillDictateurPick(channelId, target);
+  }
+
+  if (kind === 'hackeur') {
+    if (interaction.user.id !== session.hackeurId()) return;
+    fulfillHackeur(channelId, target);
   }
 }
 
