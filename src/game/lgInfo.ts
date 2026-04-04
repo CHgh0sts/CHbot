@@ -1,4 +1,6 @@
 ﻿import { EmbedBuilder, type ChatInputCommandInteraction } from 'discord.js';
+import { Role } from '../types';
+import { roleCardAttachmentForDiscord } from './roleCards';
 
 interface RoleInfo {
   name: string;
@@ -397,6 +399,43 @@ const CAMP_EMOJI: Record<string, string> = {
   'Sp\u00e9cial': '\u2728',
 };
 
+/** Correspondance clé ROLE_INFO → Role enum pour les images */
+const ROLE_KEY_TO_ENUM: Record<string, Role> = {
+  werewolf: Role.Werewolf,
+  villager: Role.Villager,
+  seer: Role.Seer,
+  witch: Role.Witch,
+  hunter: Role.Hunter,
+  cupid: Role.Cupid,
+  guard: Role.Guard,
+  thief: Role.Thief,
+  angel: Role.Angel,
+  little_girl: Role.LittleGirl,
+  raven: Role.Raven,
+  red_riding_hood: Role.RedRidingHood,
+  fool_of_village: Role.FoolOfVillage,
+  elder: Role.Elder,
+  big_bad_wolf: Role.BigBadWolf,
+  white_werewolf: Role.WhiteWerewolf,
+  pied_piper: Role.PiedPiper,
+  rusty_sword_knight: Role.RustySwordKnight,
+  scapegoat: Role.Scapegoat,
+  wild_child: Role.WildChild,
+  fox: Role.Fox,
+  pyromaniac: Role.Pyromaniac,
+  bear_tamer: Role.BearTamer,
+  two_sisters: Role.TwoSisters,
+  three_brothers: Role.ThreeBrothers,
+  docteur: Role.Docteur,
+  necromancien: Role.Necromancer,
+  sectaire: Role.Sectarian,
+  servante: Role.DevotedServant,
+  infect_pere: Role.InfectFather,
+  chien_loup: Role.DogWolf,
+  dictateur: Role.Dictateur,
+  hackeur: Role.Hackeur,
+};
+
 export async function handleLgInfo(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
@@ -428,7 +467,15 @@ export async function handleLgInfo(
 
   embed.setFooter({ text: 'Loup-Garou de Thiercelieux \u2022 /lg-info' });
 
-  await interaction.editReply({ embeds: [embed] });
+  // Attacher l\u2019image de la carte du r\u00f4le si elle existe
+  const roleEnum = ROLE_KEY_TO_ENUM[roleKey];
+  const card = roleEnum ? roleCardAttachmentForDiscord(roleEnum) : null;
+  if (card) {
+    embed.setThumbnail(card.url);
+    await interaction.editReply({ embeds: [embed], files: [card.attachment] });
+  } else {
+    await interaction.editReply({ embeds: [embed] });
+  }
 }
 
 
