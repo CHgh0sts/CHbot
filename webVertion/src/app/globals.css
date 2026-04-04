@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #0a0a0f;
+  --bg-panel: #111118;
+  --bg-card: #16161f;
+  --bg-hover: #1e1e2a;
+  --border: #2a2a3a;
+  --border-glow: #4a3080;
+  --text-primary: #e8e8f0;
+  --text-muted: #7a7a9a;
+  --accent: #7c3aed;
+  --accent-glow: #9d5bff;
+  --wolf-red: #ef4444;
+  --village-green: #22c55e;
+  --solo-gold: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(239, 68, 68, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* Glass card */
+.glass {
+  background: rgba(17, 17, 24, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.glass-hover {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.glass-hover:hover {
+  border-color: var(--border-glow);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+}
+
+/* Glow text */
+.glow-text {
+  text-shadow: 0 0 20px rgba(157, 91, 255, 0.5);
+}
+
+/* Pulse animation for night phase */
+@keyframes pulse-wolf {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+@keyframes pulse-village {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+/* Role badge colors */
+.camp-village { color: var(--village-green); border-color: var(--village-green); }
+.camp-wolves { color: var(--wolf-red); border-color: var(--wolf-red); }
+.camp-solo { color: var(--solo-gold); border-color: var(--solo-gold); }
+
+/* Phase banner */
+.phase-night {
+  background: linear-gradient(135deg, #1a0a2e 0%, #0d0d1a 100%);
+  border-color: #4a2080;
+}
+.phase-day {
+  background: linear-gradient(135deg, #1a1500 0%, #0d0d0a 100%);
+  border-color: #806020;
+}
+.phase-vote {
+  background: linear-gradient(135deg, #1a0a0a 0%, #0d0d0d 100%);
+  border-color: #803020;
+}
+
+/* Timer bar */
+@keyframes drain {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Sidebar */
+.sidebar-enter { transform: translateX(100%); opacity: 0; }
+.sidebar-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s ease-out; }
