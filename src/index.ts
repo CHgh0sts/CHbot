@@ -292,6 +292,10 @@ async function resolveGameTextChannel(
 
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
+    if (interaction.isAutocomplete()) {
+      await handleAutocomplete(interaction);
+      return;
+    }
     if (interaction.isChatInputCommand()) {
       await handleSlash(interaction);
       return;
@@ -325,6 +329,54 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
+const LG_INFO_AUTOCOMPLETE = [
+  { name: 'Loup-Garou', value: 'werewolf' },
+  { name: 'Villageois', value: 'villager' },
+  { name: 'Voyante', value: 'seer' },
+  { name: 'Sorci\u00e8re', value: 'witch' },
+  { name: 'Chasseur', value: 'hunter' },
+  { name: 'Cupidon', value: 'cupid' },
+  { name: 'Garde du Corps', value: 'guard' },
+  { name: 'Voleur', value: 'thief' },
+  { name: 'Ange', value: 'angel' },
+  { name: 'Petite Fille', value: 'little_girl' },
+  { name: 'Corbeau', value: 'raven' },
+  { name: 'Chaperon Rouge', value: 'red_riding_hood' },
+  { name: 'Idiot du Village', value: 'fool_of_village' },
+  { name: 'Ancien', value: 'elder' },
+  { name: 'Grand M\u00e9chant Loup', value: 'big_bad_wolf' },
+  { name: 'Loup-Blanc', value: 'white_werewolf' },
+  { name: 'Joueur de Fl\u00fbte', value: 'pied_piper' },
+  { name: 'Chevalier \u00e0 l\u2019\u00c9p\u00e9e Rouill\u00e9e', value: 'rusty_sword_knight' },
+  { name: 'Bouc \u00c9missaire', value: 'scapegoat' },
+  { name: 'Enfant Sauvage', value: 'wild_child' },
+  { name: 'Renard', value: 'fox' },
+  { name: 'Pyromane', value: 'pyromaniac' },
+  { name: "Montreur d\u2019Ours", value: 'bear_tamer' },
+  { name: 'Deux S\u0153urs', value: 'two_sisters' },
+  { name: 'Trois Fr\u00e8res', value: 'three_brothers' },
+  { name: 'Docteur', value: 'docteur' },
+  { name: 'N\u00e9cromancien', value: 'necromancien' },
+  { name: 'Sectaire Abominable', value: 'sectaire' },
+  { name: 'Servante D\u00e9vou\u00e9e', value: 'servante' },
+  { name: 'Infect P\u00e8re des Loups', value: 'infect_pere' },
+  { name: 'Chien-Loup', value: 'chien_loup' },
+  { name: 'Dictateur', value: 'dictateur' },
+  { name: 'Hackeur', value: 'hackeur' },
+] as const;
+
+async function handleAutocomplete(
+  interaction: import('discord.js').AutocompleteInteraction
+): Promise<void> {
+  if (interaction.commandName === 'lg-info') {
+    const focused = interaction.options.getFocused().toLowerCase();
+    const filtered = LG_INFO_AUTOCOMPLETE.filter(
+      (c) => c.name.toLowerCase().includes(focused) || c.value.toLowerCase().includes(focused)
+    ).slice(0, 25);
+    await interaction.respond(filtered).catch(() => null);
+  }
+}
 
 async function handleSlash(
   interaction: import('discord.js').ChatInputCommandInteraction
@@ -406,16 +458,65 @@ async function handleSlash(
       includeGuard: interaction.options.getBoolean('garde'),
       includeThief: interaction.options.getBoolean('voleur'),
       includeAngel: interaction.options.getBoolean('ange'),
-      includeLittleGirl: interaction.options.getBoolean('petite_fille'),
-      includeRaven: interaction.options.getBoolean('corbeau'),
-      includeRedRidingHood: interaction.options.getBoolean('chaperon_rouge'),
-      includeFoolOfVillage: interaction.options.getBoolean('idiot_du_village'),
+      includeLittleGirl: null,
+      includeRaven: null,
+      includeRedRidingHood: null,
+      includeFoolOfVillage: null,
       includeElder: interaction.options.getBoolean('ancien'),
       includeBigBadWolf: interaction.options.getBoolean('grand_mechant_loup'),
       includeWhiteWerewolf: interaction.options.getBoolean('loup_blanc'),
       includePiedPiper: interaction.options.getBoolean('joueur_de_flute'),
-      includeRustySwordKnight: interaction.options.getBoolean('chevalier_rouilee'),
+      includeRustySwordKnight: null,
       includeScapegoat: interaction.options.getBoolean('bouc_emissaire'),
+      includeWildChild: null,
+      includeFox: null,
+      includePyromaniac: null,
+      includeBearTamer: null,
+      includeTwoSisters: null,
+      includeThreeBrothers: null,
+      includeDocteur: null,
+      includeNecromancer: null,
+      includeSectarian: null,
+      includeDevotedServant: null,
+      includeInfectFather: null,
+      includeDogWolf: null,
+      includeDictateur: null,
+      includeHackeur: null,
+      tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
+      skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
+      revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
+      darkNightMode: interaction.options.getBoolean('nuit_sombre'),
+      gossipSeerMode: interaction.options.getBoolean('voyante_bavarde'),
+      tripleLoversMode: interaction.options.getBoolean('menage_trois'),
+      announceNightProtection: interaction.options.getBoolean('protection_publique'),
+      villageois: interaction.options.getInteger('villageois'),
+      villageoisAuto: interaction.options.getBoolean('villageois_auto'),
+    });
+    return;
+  }
+
+  if (commandName === 'lg-roles') {
+    await runLgConfig(gameTextChannel, user.id, gm, interaction, undefined, {
+      minPlayers: null,
+      wolfCount: null,
+      loupsAuto: null,
+      includeSeer: null,
+      includeWitch: null,
+      includeHunter: null,
+      includeCupid: null,
+      includeGuard: null,
+      includeThief: null,
+      includeAngel: null,
+      includeLittleGirl: interaction.options.getBoolean('petite_fille'),
+      includeRaven: interaction.options.getBoolean('corbeau'),
+      includeRedRidingHood: interaction.options.getBoolean('chaperon_rouge'),
+      includeFoolOfVillage: interaction.options.getBoolean('idiot_du_village'),
+      includeElder: null,
+      includeBigBadWolf: null,
+      includeWhiteWerewolf: null,
+      includePiedPiper: null,
+      includeRustySwordKnight: interaction.options.getBoolean('chevalier_rouilee'),
+      includeScapegoat: null,
       includeWildChild: interaction.options.getBoolean('enfant_sauvage'),
       includeFox: interaction.options.getBoolean('renard'),
       includePyromaniac: interaction.options.getBoolean('pyromane'),
@@ -430,17 +531,15 @@ async function handleSlash(
       includeDogWolf: interaction.options.getBoolean('chien_loup'),
       includeDictateur: interaction.options.getBoolean('dictateur'),
       includeHackeur: interaction.options.getBoolean('hackeur'),
-      tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
-      skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
-      revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
-      darkNightMode: interaction.options.getBoolean('nuit_sombre'),
-      gossipSeerMode: interaction.options.getBoolean('voyante_bavarde'),
-      tripleLoversMode: interaction.options.getBoolean('menage_trois'),
-      announceNightProtection: interaction.options.getBoolean(
-        'protection_publique'
-      ),
-      villageois: interaction.options.getInteger('villageois'),
-      villageoisAuto: interaction.options.getBoolean('villageois_auto'),
+      tiebreakerRandom: null,
+      skipFirstNightKill: null,
+      revealDeadRoles: null,
+      darkNightMode: null,
+      gossipSeerMode: null,
+      tripleLoversMode: null,
+      announceNightProtection: null,
+      villageois: null,
+      villageoisAuto: null,
     });
     return;
   }

@@ -26,305 +26,61 @@ export const slashCommands = [
   {
     name: 'lg-config',
     description:
-      'Configurer la partie (lobby) : min. joueurs, loups, voyante, sorcière, chasseur, Cupidon, etc.',
+      'Config partie : joueurs, loups, roles classiques, modes de jeu. Voir aussi /lg-roles pour les roles optionnels.',
     options: [
-      {
-        name: 'min_joueurs',
-        description: 'Nombre minimum de joueurs pour lancer la partie (4–18)',
-        type: 4,
-        min_value: 4,
-        max_value: 18,
-        required: false,
-      },
-      {
-        name: 'loups',
-        description: 'Nombre de Loups-Garous (sinon auto selon l’effectif au lancement)',
-        type: 4,
-        min_value: 1,
-        max_value: 10,
-        required: false,
-      },
-      {
-        name: 'loups_auto',
-        description:
-          'Recalculer automatiquement le nombre de loups au lancement (ignore « loups »)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'voyante',
-        description: 'Inclure la voyante',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'sorciere',
-        description: 'Inclure la sorcière',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'chasseur',
-        description: 'Inclure le chasseur',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'cupidon',
-        description:
-          'Cupidon : oui = 1re nuit (couple ou ménage à trois si « menage_trois ») · non = désactivé',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'garde',
-        description:
-          'Garde : oui = 1 Garde en jeu (protège une cible chaque nuit contre les loups)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'voleur',
-        description:
-          'Voleur : oui = 1 Voleur en jeu (1re nuit, échange de carte avec un joueur)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'ange',
-        description:
-          'Ange : oui = 1 Ange (gagne seul si éliminé au 1er vote du village, sinon devient villageois)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'petite_fille',
-        description:
-          'Petite fille : oui = peut espionner le vote des loups chaque nuit (50 % repérée = mort)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'corbeau',
-        description:
-          'Corbeau : oui = marque chaque nuit un joueur qui reçoit +2 votes au vote du village suivant',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'chaperon_rouge',
-        description:
-          'Chaperon Rouge : oui = prot\u00e9g\u00e9e des loups tant que le Chasseur est en vie (pouvoir passif)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'idiot_du_village',
-        description:
-          'Idiot du village : oui = survit au 1er vote du village (perd son droit de vote ensuite)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'ancien',
-        description:
-          'Ancien : oui = survit \u00e0 la 1re attaque des loups ; si tu\u00e9 par le village, tous les sp\u00e9ciaux villageois perdent leurs pouvoirs',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'grand_mechant_loup',
-        description:
-          'Grand M\u00e9chant Loup : oui = loup qui peut tuer un joueur suppl\u00e9mentaire chaque nuit tant qu\u2019aucun loup n\u2019est mort',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'loup_blanc',
-        description:
-          'Loup-Blanc : oui = loup solo qui peut tuer un loup en secret toutes les nuits paires, gagne seul si dernier survivant',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'joueur_de_flute',
-        description:
-          'Joueur de Fl\u00fbte : oui = ensorcelle 2 joueurs/nuit, gagne seul quand tous les vivants sont ensorcel\u00e9s',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'chevalier_rouilee',
-        description:
-          'Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e : oui = si d\u00e9vor\u00e9 par les loups, le 1er loup alpha meurt \u00e0 l\u2019aube suivante',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'bouc_emissaire',
-        description:
-          'Bouc \u00c9missaire : oui = meurt en cas d\u2019\u00e9galit\u00e9 au vote, puis choisit qui peut voter',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'enfant_sauvage',
-        description:
-          'Enfant Sauvage : oui = village au d\u00e9part, se transforme en loup si son mod\u00e8le (choisi nuit 1) meurt',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'renard',
-        description:
-          'Renard : oui = flairer 3 joueurs/nuit, perd son pouvoir si aucun loup parmi eux (camp Village)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'pyromane',
-        description:
-          'Pyromane : oui = arrose 1 joueur/nuit, peut incendier tous les arros\u00e9s en une fois (camp Solo)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'montreur_ours',
-        description:
-          "Montreur d'Ours : oui = l'ours grogne \u00e0 l'aube si un voisin secret est un loup (passif, camp Village)",
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'deux_soeurs',
-        description:
-          'Deux S\u0153urs : oui = 2 joueuses se reconnaissent nuit 1 dans un fil partag\u00e9 (camp Village x2)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'trois_freres',
-        description:
-          'Trois Fr\u00e8res : oui = 3 joueurs se reconnaissent nuit 1 dans un fil partag\u00e9 (camp Village x3)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'docteur',
-        description: 'Docteur : oui = 3 charges de protection, sans restriction de cible cons\u00e9cutive (camp Village)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'necromancien',
-        description: 'N\u00e9cromancien : oui = inspecte un mort/nuit pour conna\u00eetre son r\u00f4le exact (camp Village)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'sectaire_abominable',
-        description: 'Sectaire Abominable : oui = solo, gagne si tous les survivants sont du m\u00eame groupe',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'servante_devouee',
-        description: 'Servante D\u00e9vou\u00e9e : oui = survit en prenant le r\u00f4le du dernier mort (camp Village)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'infect_pere_loups',
-        description: 'Infect P\u00e8re des Loups : oui = peut infecter la victime (la transformer en loup) 1 fois (camp Loups)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'chien_loup',
-        description: 'Chien-Loup : oui = choisit son camp nuit 1 (Village ou Loups)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'dictateur',
-        description: 'Dictateur : oui = peut imposer la victime du vote (1 fois, devient Maire si correct)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'hackeur',
-        description: 'Hackeur : oui = vole le rôle de sa cible nuit 1 (invisible Voyante avant vol)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'tiebreaker_random',
-        description:
-          '\u00c9galit\u00e9 au vote : oui = tirage au sort parmi les ex-aequo (non = personne ne meurt)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'premiere_nuit_sans_meurtre',
-        description:
-          '1re nuit sans meurtre : oui = les loups se r\u00e9unissent mais n\u2019\u00e9liminent personne la nuit 1',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'roles_morts_visibles',
-        description:
-          'Afficher le rôle de chaque mort (ignoré si « nuit_sombre » est activé)',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'nuit_sombre',
-        description:
-          'Mode nuit sombre : morts annoncées mais rôle jamais révélé publiquement',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'voyante_bavarde',
-        description:
-          'Voyante bavarde : rôle exact en privé ; le salon ne révèle un rôle que dans les annonces de mort',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'menage_trois',
-        description:
-          'Cupidon lie 3 joueurs (ménage à trois) au lieu d’un couple',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'protection_publique',
-        description:
-          'Annonce publique vague quand le Garde ou l’Ange protège / bénit quelqu’un la nuit',
-        type: 5,
-        required: false,
-      },
-      {
-        name: 'villageois',
-        description:
-          'Nombre de villageois simples (fixe). Sinon recalcul auto si tu changes min / loups / spéciaux',
-        type: 4,
-        min_value: 0,
-        max_value: 18,
-        required: false,
-      },
-      {
-        name: 'villageois_auto',
-        description:
-          'Villageois = reste à la distribution (pas de nombre fixe ; ignore « villageois »)',
-        type: 5,
-        required: false,
-      },
+      { name: 'min_joueurs', description: 'Nombre minimum de joueurs pour lancer (4-18)', type: 4, min_value: 4, max_value: 18, required: false },
+      { name: 'loups', description: 'Nombre de Loups-Garous (sinon auto)', type: 4, min_value: 1, max_value: 10, required: false },
+      { name: 'loups_auto', description: 'Recalcul auto du nombre de loups (ignore "loups")', type: 5, required: false },
+      { name: 'voyante', description: 'Inclure la Voyante', type: 5, required: false },
+      { name: 'sorciere', description: 'Inclure la Sorciere', type: 5, required: false },
+      { name: 'chasseur', description: 'Inclure le Chasseur', type: 5, required: false },
+      { name: 'cupidon', description: 'Cupidon : 1re nuit, forme un couple (ou menage a 3 si menage_trois)', type: 5, required: false },
+      { name: 'garde', description: 'Garde du Corps : protege une cible par nuit', type: 5, required: false },
+      { name: 'voleur', description: 'Voleur : 1re nuit, echange de carte avec un joueur', type: 5, required: false },
+      { name: 'ange', description: 'Ange : gagne seul si elimine au 1er vote, sinon devient villageois', type: 5, required: false },
+      { name: 'ancien', description: 'Ancien : survit 1re attaque loups ; si elimine par village, tous les speciaux perdent leur pouvoir', type: 5, required: false },
+      { name: 'grand_mechant_loup', description: 'Grand Mechant Loup : tue un joueur supplementaire/nuit (tant que aucun loup mort)', type: 5, required: false },
+      { name: 'loup_blanc', description: 'Loup-Blanc : peut tuer un loup secret nuits paires, gagne seul en dernier', type: 5, required: false },
+      { name: 'joueur_de_flute', description: 'Joueur de Flute : ensorcelle 2 joueurs/nuit, gagne seul si tous ensorcel\u00e9s', type: 5, required: false },
+      { name: 'bouc_emissaire', description: 'Bouc Emissaire : meurt en cas d\u2019egalite au vote, choisit ensuite qui peut voter', type: 5, required: false },
+      { name: 'tiebreaker_random', description: 'Egalite au vote : oui = tirage sort, non = personne ne meurt', type: 5, required: false },
+      { name: 'premiere_nuit_sans_meurtre', description: '1re nuit sans meurtre : loups se reunissent mais n\u2019eliminant personne', type: 5, required: false },
+      { name: 'roles_morts_visibles', description: 'Afficher le role de chaque mort (ignore si nuit_sombre actif)', type: 5, required: false },
+      { name: 'nuit_sombre', description: 'Mode nuit sombre : morts annoncees mais role jamais revele publiquement', type: 5, required: false },
+      { name: 'voyante_bavarde', description: 'Voyante bavarde : role exact en prive ; revele uniquement dans les annonces de mort', type: 5, required: false },
+      { name: 'menage_trois', description: 'Cupidon lie 3 joueurs au lieu d\u2019un couple', type: 5, required: false },
+      { name: 'protection_publique', description: 'Annonce publique vague quand le Garde ou l\u2019Ange protege quelqu\u2019un', type: 5, required: false },
+      { name: 'villageois', description: 'Nombre de villageois simples (fixe)', type: 4, min_value: 0, max_value: 18, required: false },
+      { name: 'villageois_auto', description: 'Villageois = reste a la distribution (ignore "villageois")', type: 5, required: false },
     ],
   },
   {
+    name: 'lg-roles',
+    description:
+      'Activer/desactiver les roles optionnels/extensions. Voir aussi /lg-config pour les reglages generaux.',
+    options: [
+      { name: 'petite_fille', description: 'Petite Fille : peut espionner le vote des loups (50% reperage = mort)', type: 5, required: false },
+      { name: 'corbeau', description: 'Corbeau : marque 1 joueur/nuit qui recoit +2 votes au vote suivant', type: 5, required: false },
+      { name: 'chaperon_rouge', description: 'Chaperon Rouge : protege des loups tant que le Chasseur est en vie (passif)', type: 5, required: false },
+      { name: 'idiot_du_village', description: 'Idiot du Village : survit au 1er vote (perd son droit de vote ensuite)', type: 5, required: false },
+      { name: 'chevalier_rouilee', description: 'Chevalier a l\u2019Epee Rouill\u00e9e : si devore, le 1er loup meurt a l\u2019aube suivante', type: 5, required: false },
+      { name: 'enfant_sauvage', description: 'Enfant Sauvage : devient loup si son modele (choisi nuit 1) meurt', type: 5, required: false },
+      { name: 'renard', description: 'Renard : flairer 3 joueurs/nuit, perd son pouvoir si aucun loup parmi eux', type: 5, required: false },
+      { name: 'pyromane', description: 'Pyromane : arrose 1 joueur/nuit, peut incendier tous les arros\u00e9s (Solo)', type: 5, required: false },
+      { name: 'montreur_ours', description: "Montreur d\u2019Ours : l\u2019ours grogne a l\u2019aube si un voisin secret est un loup (passif)", type: 5, required: false },
+      { name: 'deux_soeurs', description: 'Deux Soeurs : 2 joueuses se reconnaissent nuit 1 dans un fil partage', type: 5, required: false },
+      { name: 'trois_freres', description: 'Trois Freres : 3 joueurs se reconnaissent nuit 1 dans un fil partage', type: 5, required: false },
+      { name: 'docteur', description: 'Docteur : 3 charges de protection nocturne sans restriction de cible', type: 5, required: false },
+      { name: 'necromancien', description: 'Necromancien : fil prive avec tous les morts pour communiquer avec eux', type: 5, required: false },
+      { name: 'sectaire_abominable', description: 'Sectaire Abominable : Solo, gagne si tous les survivants sont du meme groupe', type: 5, required: false },
+      { name: 'servante_devouee', description: 'Servante Devouee : apres le vote, peut prendre la place de la victime (1 fois)', type: 5, required: false },
+      { name: 'infect_pere_loups', description: 'Infect Pere des Loups : peut infecter la victime loups (la transformer en loup, 1 fois)', type: 5, required: false },
+      { name: 'chien_loup', description: 'Chien-Loup : choisit son camp nuit 1 (Village ou Loups)', type: 5, required: false },
+      { name: 'dictateur', description: 'Dictateur : impose la victime du vote 1 fois (devient Maire si correct, sinon meurt)', type: 5, required: false },
+      { name: 'hackeur', description: 'Hackeur : vole le role de sa cible nuit 1 (invisible Voyante avant vol)', type: 5, required: false },
+    ],
+  },
+    {
     name: 'lg-leave',
     description: 'Quitter le lobby avant le début',
   },
@@ -360,51 +116,19 @@ export const slashCommands = [
   },
   {
     name: 'lg-info',
-    description: 'Affiche la fiche compl\u00e8te d\u2019un r\u00f4le du jeu Loup-Garou',
+    description: 'Affiche la fiche complete d\u2019un role du jeu Loup-Garou',
     options: [
       {
         name: 'role',
-        description: 'Le r\u00f4le \u00e0 afficher',
+        description: 'Le role a afficher (commence a taper pour filtrer)',
         type: 3,
         required: true,
-        choices: [
-          { name: 'Loup-Garou',                        value: 'werewolf' },
-          { name: 'Villageois',                         value: 'villager' },
-          { name: 'Voyante',                            value: 'seer' },
-          { name: 'Sorci\u00e8re',                     value: 'witch' },
-          { name: 'Chasseur',                           value: 'hunter' },
-          { name: 'Cupidon',                            value: 'cupid' },
-          { name: 'Garde du Corps',                     value: 'guard' },
-          { name: 'Voleur',                             value: 'thief' },
-          { name: 'Ange',                               value: 'angel' },
-          { name: 'Petite Fille',                       value: 'little_girl' },
-          { name: 'Corbeau',                            value: 'raven' },
-          { name: 'Chaperon Rouge',                     value: 'red_riding_hood' },
-          { name: 'Idiot du Village',                   value: 'fool_of_village' },
-          { name: 'Ancien',                             value: 'elder' },
-          { name: 'Grand M\u00e9chant Loup',           value: 'big_bad_wolf' },
-          { name: 'Loup-Blanc',                         value: 'white_werewolf' },
-          { name: 'Joueur de Fl\u00fbte',              value: 'pied_piper' },
-          { name: 'Chevalier \u00e0 l\u2019\u00c9p\u00e9e Rouill\u00e9e', value: 'rusty_sword_knight' },
-          { name: 'Bouc \u00c9missaire',               value: 'scapegoat' },
-          { name: 'Enfant Sauvage',                     value: 'wild_child' },
-          { name: 'Renard',                             value: 'fox' },
-          { name: 'Pyromane',                           value: 'pyromaniac' },
-          { name: "Montreur d\u2019Ours",              value: 'bear_tamer' },
-          { name: 'Deux S\u0153urs',                   value: 'two_sisters' },
-          { name: 'Trois Fr\u00e8res',                 value: 'three_brothers' },
-          { name: 'Docteur',                            value: 'docteur' },
-          { name: 'N\u00e9cromancien',                 value: 'necromancien' },
-          { name: 'Sectaire Abominable',                value: 'sectaire' },
-          { name: 'Servante D\u00e9vou\u00e9e',        value: 'servante' },
-          { name: 'Infect P\u00e8re des Loups',        value: 'infect_pere' },
-          { name: 'Chien-Loup',                         value: 'chien_loup' },
-          { name: 'Dictateur',                          value: 'dictateur' },
-          { name: 'Hackeur',                            value: 'hackeur' },
-        ],
+        autocomplete: true,
       },
     ],
   },
 ];
+
+
 
 
