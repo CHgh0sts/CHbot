@@ -63,6 +63,12 @@ export function buildNightRoadmap(session: GameSession): string {
     );
   }
 
+  if (session.redRidingHoodId() && session.hunterId()) {
+    lines.push(
+      `_(passif) **Chaperon Rouge** — protégée des loups tant que le **Chasseur** est en vie_`
+    );
+  }
+
   const beforeAube = lines.length;
   lines.push(`${i}. **Aube** — révélation des morts et suite de la partie`);
 

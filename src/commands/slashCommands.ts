@@ -112,6 +112,13 @@ export const slashCommands = [
         required: false,
       },
       {
+        name: 'chaperon_rouge',
+        description:
+          'Chaperon Rouge : oui = protégée des loups tant que le Chasseur est en vie (pouvoir passif)',
+        type: 5,
+        required: false,
+      },
+      {
         name: 'roles_morts_visibles',
         description:
           'Afficher le rôle de chaque mort (ignoré si « nuit_sombre » est activé)',

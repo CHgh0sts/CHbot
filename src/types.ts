@@ -10,6 +10,7 @@ export enum Role {
   Angel = 'ANGEL',
   LittleGirl = 'LITTLE_GIRL',
   Raven = 'RAVEN',
+  RedRidingHood = 'RED_RIDING_HOOD',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';

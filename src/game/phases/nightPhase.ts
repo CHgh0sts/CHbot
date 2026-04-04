@@ -558,6 +558,18 @@ export async function runWolfPhase(
     if (wolfTarget === session.guardProtectedUserId) {
       wolfTarget = null;
     }
+    const rrhId = session.redRidingHoodId();
+    if (wolfTarget !== null && wolfTarget === rrhId && session.hunterId()) {
+      await textChannel.send({
+        embeds: [
+          publicEmbed(
+            'Le Chaperon Rouge est sauf\u2026',
+            'Les loups ont tent\u00e9 de d\u00e9vorer quelqu\u2019un, mais leur proie \u00e9tait prot\u00e9g\u00e9e cette nuit. **Personne** ne meurt de leur attaque.'
+          ).setColor(0xd63031),
+        ],
+      });
+      wolfTarget = null;
+    }
     session.wolfTargetId = wolfTarget;
   }
 

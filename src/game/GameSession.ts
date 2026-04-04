@@ -201,6 +201,13 @@ export class GameSession {
     return p?.userId;
   }
 
+  redRidingHoodId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.RedRidingHood && x.alive
+    );
+    return p?.userId;
+  }
+
   getPlayer(userId: string): PlayerState | undefined {
     return this.players.get(userId);
   }

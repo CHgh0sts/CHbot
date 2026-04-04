@@ -30,6 +30,8 @@ export interface CompositionConfig {
   includeLittleGirl: boolean;
   /** **Corbeau** : chaque nuit, désigne un joueur vivant ; le lendemain ce joueur recoit +2 votes au vote du village. */
   includeRaven: boolean;
+  /** **Chaperon Rouge** : tant que le Chasseur est en vie, les loups ne peuvent pas la manger (pouvoir passif). */
+  includeRedRidingHood: boolean;
   /** Afficher le rôle de chaque mort dans les annonces du salon (nuit / vote) */
   revealDeadRoles: boolean;
   /**
@@ -64,6 +66,7 @@ export function fixedCompositionTotal(c: CompositionConfig): number | null {
   if (c.includeAngel) fixed++;
   if (c.includeLittleGirl) fixed++;
   if (c.includeRaven) fixed++;
+  if (c.includeRedRidingHood) fixed++;
   return w + fixed + c.villagerCount;
 }
 
@@ -80,6 +83,7 @@ export function villagerCountToMatchMinPlayers(c: CompositionConfig): number {
   if (c.includeAngel) fixed++;
   if (c.includeLittleGirl) fixed++;
   if (c.includeRaven) fixed++;
+  if (c.includeRedRidingHood) fixed++;
   return Math.max(0, c.minPlayers - w - fixed);
 }
 
@@ -95,6 +99,7 @@ export function defaultCompositionConfig(): CompositionConfig {
   const includeAngel = false;
   const includeLittleGirl = false;
   const includeRaven = false;
+  const includeRedRidingHood = false;
   const revealDeadRoles = true;
   const darkNightMode = false;
   const gossipSeerMode = false;
@@ -112,6 +117,7 @@ export function defaultCompositionConfig(): CompositionConfig {
     includeAngel,
     includeLittleGirl,
     includeRaven,
+    includeRedRidingHood,
     revealDeadRoles,
     darkNightMode,
     gossipSeerMode,
@@ -139,6 +145,7 @@ export function cloneCompositionConfig(c: CompositionConfig): CompositionConfig 
     includeAngel: c.includeAngel,
     includeLittleGirl: c.includeLittleGirl,
     includeRaven: c.includeRaven,
+    includeRedRidingHood: c.includeRedRidingHood,
     revealDeadRoles: c.revealDeadRoles,
     darkNightMode: c.darkNightMode,
     gossipSeerMode: c.gossipSeerMode,
@@ -168,6 +175,7 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeAngel) fixed++;
   if (config.includeLittleGirl) fixed++;
   if (config.includeRaven) fixed++;
+  if (config.includeRedRidingHood) fixed++;
 
   let villagers: number;
   if (config.villagerCount === null) {
@@ -202,6 +210,7 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeAngel) roles.push(Role.Angel);
   if (config.includeLittleGirl) roles.push(Role.LittleGirl);
   if (config.includeRaven) roles.push(Role.Raven);
+  if (config.includeRedRidingHood) roles.push(Role.RedRidingHood);
   for (let i = 0; i < villagers; i++) roles.push(Role.Villager);
 
   return roles;
@@ -296,8 +305,9 @@ export function roleLabelFr(role: Role): string {
     case Role.LittleGirl:
       return 'Petite fille';
     case Role.Raven:
-      return 'Chaque nuit, tu designe un joueur vivant dans ton fil prive. Le lendemain, ce joueur recoit **+2 votes** supplementaires au vote du village (le salon public annonce qu un joueur a ete marque, sans reveler ton identite). Si tu ne designes personne (timeout / skip), rien ne se passe.';
       return 'Corbeau';
+    case Role.RedRidingHood:
+      return 'Chaperon Rouge';
     default:
       return role;
   }
@@ -323,7 +333,9 @@ export function rolePowerBlurb(role: Role): string {
     case Role.Angel:
       return '**Pas d’action la nuit.** Au **tout premier vote du village**, si **c’est toi** qui es éliminé·e, tu **gagnes seul·e** et la partie s’arrête. **Sinon** (une autre personne est éliminée, ou égalité / pas de mort au vote), tu deviens un **villageois** ordinaire (nouveau message dans ton fil privé).';
     case Role.Raven:
-      return 'Chaque nuit, tu designe un joueur vivant dans ton fil prive. Le lendemain, ce joueur recoit **+2 votes** supplementaires au vote du village (le salon public annonce qu un joueur a ete marque, sans reveler ton identite). Si tu ne designes personne (timeout / skip), rien ne se passe.';
+      return 'Chaque nuit, tu designes un joueur vivant dans ton fil prive. Le lendemain, ce joueur recoit **+2 votes** supplementaires au vote du village (le salon public annonce qu un joueur a ete marque, sans reveler ton identite). Si tu ne designes personne (timeout / skip), rien ne se passe.';
+    case Role.RedRidingHood:
+      return 'Tant que le **Chasseur** est en vie, les loups ne peuvent pas te devorer (attaque absorbee — personne ne meurt de ce fait cette nuit). Si le Chasseur meurt, tu perds cette protection et peux etre mangee normalement. Pas d action nocturne : ton pouvoir est entierement passif.';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:
@@ -357,6 +369,7 @@ export function formatCompositionReadable(
   if (c.includeAngel) fixed++;
   if (c.includeLittleGirl) fixed++;
   if (c.includeRaven) fixed++;
+  if (c.includeRedRidingHood) fixed++;
 
   const lines: string[] = [];
   const wolfNote =
@@ -372,6 +385,7 @@ export function formatCompositionReadable(
   if (c.includeThief) lines.push(`• **${roleLabelFr(Role.Thief)}** × **1**`);
   if (c.includeAngel) lines.push(`• **${roleLabelFr(Role.Angel)}** × **1**`);
   if (c.includeRaven) lines.push(`• **${roleLabelFr(Role.Raven)}** × **1**`);
+  if (c.includeRedRidingHood) lines.push(`• **${roleLabelFr(Role.RedRidingHood)}** × **1**`);
   if (c.includeLittleGirl) {
     lines.push(`• **${roleLabelFr(Role.LittleGirl)}** × **1**`);
   }
@@ -408,6 +422,7 @@ export function formatCompositionReadable(
     `**Voleur** : ${c.includeThief ? '**activé**' : '**désactivé**'}`,
     `**Ange** : ${c.includeAngel ? '**activé**' : '**désactivé**'}`,
     `**Corbeau** : ${c.includeRaven ? '**activé** — +2 votes sur sa cible le lendemain' : '**désactivé**'}`,
+    `**Chaperon Rouge** : ${c.includeRedRidingHood ? '**activée** — protégée des loups tant que le Chasseur est en vie' : '**désactivée**'}`,
     `**Petite fille** : ${c.includeLittleGirl ? '**activée**' : '**désactivée**'}`,
     `**Nuit sombre** : ${c.darkNightMode ? '**oui** — jamais de rôle public' : 'non'}`,
     `**Voyante bavarde** : ${c.gossipSeerMode ? '**oui** — rôle exact en privé (public seulement via annonces de mort)' : 'non'}`,

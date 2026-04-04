@@ -17,6 +17,7 @@ const GATED_KEYS: (keyof CompositionConfig & keyof LgConfigOptions)[] = [
   'includeAngel',
   'includeLittleGirl',
   'includeRaven',
+  'includeRedRidingHood',
   'revealDeadRoles',
   'darkNightMode',
   'gossipSeerMode',
