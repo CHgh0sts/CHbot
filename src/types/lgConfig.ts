@@ -25,6 +25,12 @@ export interface LgConfigOptions {
   includeBearTamer: boolean | null;
   includeTwoSisters: boolean | null;
   includeThreeBrothers: boolean | null;
+  includeDocteur: boolean | null;
+  includeNecromancer: boolean | null;
+  includeSectarian: boolean | null;
+  includeDevotedServant: boolean | null;
+  includeInfectFather: boolean | null;
+  includeDogWolf: boolean | null;
   tiebreakerRandom: boolean | null;
   skipFirstNightKill: boolean | null;
   revealDeadRoles: boolean | null;

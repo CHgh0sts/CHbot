@@ -1,4 +1,4 @@
-import { EmbedBuilder, type ChatInputCommandInteraction } from 'discord.js';
+﻿import { EmbedBuilder, type ChatInputCommandInteraction } from 'discord.js';
 
 interface RoleInfo {
   name: string;
@@ -300,6 +300,66 @@ const ROLE_INFO: Record<string, RoleInfo> = {
     victory: 'Gagnent avec le **camp Village**.',
     tip: "Trois joueurs coo\u00f6donnants qui se connaissent \u2014 un bloc de confiance tr\u00e8s puissant pour le village.",
   },
+  docteur: {
+    name: 'Docteur',
+    emoji: '\u{1FA79}',
+    camp: 'Village',
+    campColor: 0x1abc9c,
+    power: 'Dispose de **3 charges** de soin. Chaque nuit, prot\u00e8ge un joueur (sans restriction de cible cons\u00e9cutive, contrairement au Garde). Si ce joueur est attaqu\u00e9 par les loups, il survit. Quand les charges sont \u00e9puis\u00e9es, il n\u2019agit plus.',
+    timing: 'Chaque nuit, en fil priv\u00e9.',
+    victory: 'Gagne avec le **camp Village**.',
+    tip: 'La force du Docteur est de prot\u00e9ger le m\u00eame joueur deux nuits de suite \u2014 impossible pour le Garde. Sauvegardez les joueurs cl\u00e9s (Voyante, Sorci\u00e8re).',
+  },
+  necromancien: {
+    name: 'N\u00e9cromancien',
+    emoji: '\u{1F480}',
+    camp: 'Village',
+    campColor: 0x6c3483,
+    power: 'Chaque nuit, choisit un **joueur mort** et apprend son **r\u00f4le exact** dans son fil priv\u00e9. Pouvoir purement informatif \u2014 il ne peut pas ramener les morts \u00e0 la vie.',
+    timing: 'Chaque nuit (si au moins un mort), en fil priv\u00e9.',
+    victory: 'Gagne avec le **camp Village**.',
+    tip: 'Tr\u00e8s utile pour reconstruire l\u2019historique de la partie. Les infos sur les morts permettent de d\u00e9duire l\u2019identit\u00e9 des Loups encore en vie.',
+  },
+  sectaire: {
+    name: 'Sectaire Abominable',
+    emoji: '\u{1F52E}',
+    camp: 'Solo',
+    campColor: 0x8e44ad,
+    power: 'Au d\u00e9but du jeu, tous les joueurs sont r\u00e9partis en **deux groupes secrets** (A et B). Le Sectaire apprend son groupe. Chaque nuit, il inspecte un joueur et apprend son groupe. Il gagne **seul** quand tous les survivants (lui compris) sont du m\u00eame groupe.',
+    timing: 'Chaque nuit (inspection), en fil priv\u00e9. Groupes assign\u00e9s nuit 1.',
+    victory: 'Gagne **seul** quand tous les survivants sont dans le m\u00eame groupe que lui.',
+    tip: 'Vous devez \u00e9liminer les membres de l\u2019autre groupe tout en manipulant le village. Faites semblant d\u2019\u00eatre Voyante ou Corbeau pour gagner en cr\u00e9dibilit\u00e9.',
+  },
+  servante: {
+    name: 'Servante D\u00e9vou\u00e9e',
+    emoji: '\uD83E\uDDD5',
+    camp: 'Village',
+    campColor: 0xf39c12,
+    power: 'R\u00f4le passif. Quand elle est \u00e9limin\u00e9e (nuit ou vote), elle peut choisir de **ne pas mourir** en prenant le r\u00f4le du **dernier joueur \u00e9limin\u00e9 avant elle**. Elle continue la partie avec ce nouveau r\u00f4le et ses pouvoirs. L\u2019identit\u00e9 est r\u00e9v\u00e9l\u00e9e publiquement.',
+    timing: 'Passif \u2014 d\u00e9clenche automatiquement au moment de l\u2019\u00e9limination.',
+    victory: 'D\u00e9pend du r\u00f4le adopt\u00e9 apr\u00e8s transformation.',
+    tip: 'Si le dernier mort \u00e9tait un Loup, vous devenez loup ! Attendez que le dernier mort soit un r\u00f4le Village puissant (Voyante, Sorci\u00e8re) avant de vous faire \u00e9liminer.',
+  },
+  infect_pere: {
+    name: 'Infect P\u00e8re des Loups',
+    emoji: '\u{1F9DF}',
+    camp: 'Loups-Garous',
+    campColor: 0x2e4053,
+    power: '**Une fois par partie**, apr\u00e8s que la meute a d\u00e9sign\u00e9 sa victime, l\u2019Infect P\u00e8re peut choisir de l\u2019**infecter** plut\u00f4t que de la tuer. La victime devient un loup secr\u00e8tement (rejoint la meute), aucune mort n\u2019est annonc\u00e9e ce soir-l\u00e0.',
+    timing: 'Apr\u00e8s le vote de la meute, une seule fois par partie, en fil priv\u00e9.',
+    victory: 'Gagne avec le **camp Loups-Garous**.',
+    tip: 'Infecter la Voyante ou la Sorci\u00e8re retourne les piliers du village contre lui-m\u00eame. N\u2019utilisez votre pouvoir ni trop t\u00f4t (peu utile) ni trop tard.',
+  },
+  chien_loup: {
+    name: 'Chien-Loup',
+    emoji: '\uD83D\uDC3A',
+    camp: 'Sp\u00e9cial',
+    campColor: 0x7f8c8d,
+    power: 'La **nuit 1**, le Chien-Loup choisit son camp pour toute la partie : **Village** (joue comme villageois) ou **Loups** (rejoint la meute secr\u00e8tement dans le fil Meute). Le village ne sait pas quel camp a \u00e9t\u00e9 choisi.',
+    timing: 'Nuit 1 uniquement, en fil priv\u00e9.',
+    victory: 'Gagne avec le **camp choisi** (Village ou Loups).',
+    tip: 'Si vous choisissez les Loups, gardez un comportement villageois le jour. Votre avantage : le village vous fait confiance.',
+  },
 };
 
 const CAMP_EMOJI: Record<string, string> = {
@@ -344,3 +404,6 @@ export async function handleLgInfo(
 
   await interaction.reply({ embeds: [embed] });
 }
+
+
+

@@ -58,6 +58,18 @@ export interface CompositionConfig {
   includeTwoSisters: boolean;
   /** **Trois Frères** : camp Village × 3. La nuit 1, ils se reconnaissent via un fil partagé. */
   includeThreeBrothers: boolean;
+  /** **Docteur** : camp Village. Dispose de 3 charges de protection. Chaque nuit, protège un joueur (pas de restriction de cible consécutive). */
+  includeDocteur: boolean;
+  /** **Nécromancien** : camp Village. Chaque nuit, inspecte un joueur mort et apprend son rôle exact. */
+  includeNecromancer: boolean;
+  /** **Sectaire Abominable** : camp Solo. Les joueurs sont répartis en 2 groupes secrets. Il gagne seul si tous les survivants sont du même groupe que lui. */
+  includeSectarian: boolean;
+  /** **Servante Dévouée** : camp Village. Rôle passif : quand elle est éliminée, elle SURVIT en prenant le rôle du dernier joueur mort avant elle. */
+  includeDevotedServant: boolean;
+  /** **Infect Père des Loups** : camp Loups. Une fois par partie, peut infecter la victime des loups (elle devient loup secrètement) au lieu de la tuer. */
+  includeInfectFather: boolean;
+  /** **Chien-Loup** : camp Spécial. La nuit 1, choisit son camp (Village ou Loups). S'il choisit les Loups, il rejoint la meute. */
+  includeDogWolf: boolean;
   /** **Tirage au sort en cas d'égalité** au vote du village : un ex-aequo est éliminé aléatoirement (sinon personne ne meurt). */
   tiebreakerRandom: boolean;
   /** **Première nuit sans meurtre** : les loups se réunissent mais n'éliminent personne la nuit 1. */
@@ -110,6 +122,12 @@ export function fixedCompositionTotal(c: CompositionConfig): number | null {
   if (c.includeBearTamer) fixed++;
   if (c.includeTwoSisters) fixed += 2;
   if (c.includeThreeBrothers) fixed += 3;
+  if (c.includeDocteur) fixed++;
+  if (c.includeNecromancer) fixed++;
+  if (c.includeSectarian) fixed++;
+  if (c.includeDevotedServant) fixed++;
+  if (c.includeInfectFather) fixed++;
+  if (c.includeDogWolf) fixed++;
   return w + fixed + c.villagerCount;
 }
 
@@ -140,6 +158,12 @@ export function villagerCountToMatchMinPlayers(c: CompositionConfig): number {
   if (c.includeBearTamer) fixed++;
   if (c.includeTwoSisters) fixed += 2;
   if (c.includeThreeBrothers) fixed += 3;
+  if (c.includeDocteur) fixed++;
+  if (c.includeNecromancer) fixed++;
+  if (c.includeSectarian) fixed++;
+  if (c.includeDevotedServant) fixed++;
+  if (c.includeInfectFather) fixed++;
+  if (c.includeDogWolf) fixed++;
   return Math.max(0, c.minPlayers - w - fixed);
 }
 
@@ -169,6 +193,12 @@ export function defaultCompositionConfig(): CompositionConfig {
   const includeBearTamer = false;
   const includeTwoSisters = false;
   const includeThreeBrothers = false;
+  const includeDocteur = false;
+  const includeNecromancer = false;
+  const includeSectarian = false;
+  const includeDevotedServant = false;
+  const includeInfectFather = false;
+  const includeDogWolf = false;
   const tiebreakerRandom = false;
   const skipFirstNightKill = false;
   const revealDeadRoles = true;
@@ -202,6 +232,12 @@ export function defaultCompositionConfig(): CompositionConfig {
     includeBearTamer,
     includeTwoSisters,
     includeThreeBrothers,
+    includeDocteur,
+    includeNecromancer,
+    includeSectarian,
+    includeDevotedServant,
+    includeInfectFather,
+    includeDogWolf,
     tiebreakerRandom,
     skipFirstNightKill,
     revealDeadRoles,
@@ -245,6 +281,12 @@ export function cloneCompositionConfig(c: CompositionConfig): CompositionConfig 
     includeBearTamer: c.includeBearTamer,
     includeTwoSisters: c.includeTwoSisters,
     includeThreeBrothers: c.includeThreeBrothers,
+    includeDocteur: c.includeDocteur,
+    includeNecromancer: c.includeNecromancer,
+    includeSectarian: c.includeSectarian,
+    includeDevotedServant: c.includeDevotedServant,
+    includeInfectFather: c.includeInfectFather,
+    includeDogWolf: c.includeDogWolf,
     tiebreakerRandom: c.tiebreakerRandom,
     skipFirstNightKill: c.skipFirstNightKill,
     revealDeadRoles: c.revealDeadRoles,
@@ -338,6 +380,12 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeBearTamer) roles.push(Role.BearTamer);
   if (config.includeTwoSisters) { roles.push(Role.TwoSisters); roles.push(Role.TwoSisters); }
   if (config.includeThreeBrothers) { roles.push(Role.ThreeBrothers); roles.push(Role.ThreeBrothers); roles.push(Role.ThreeBrothers); }
+  if (config.includeDocteur) roles.push(Role.Docteur);
+  if (config.includeNecromancer) roles.push(Role.Necromancer);
+  if (config.includeSectarian) roles.push(Role.Sectarian);
+  if (config.includeDevotedServant) roles.push(Role.DevotedServant);
+  if (config.includeInfectFather) roles.push(Role.InfectFather);
+  if (config.includeDogWolf) roles.push(Role.DogWolf);
   for (let i = 0; i < villagers; i++) roles.push(Role.Villager);
 
   return roles;
@@ -461,6 +509,18 @@ export function roleLabelFr(role: Role): string {
       return 'Deux S\u0153urs';
     case Role.ThreeBrothers:
       return 'Trois Fr\u00e8res';
+    case Role.Docteur:
+      return 'Docteur';
+    case Role.Necromancer:
+      return 'N\u00e9cromancien';
+    case Role.Sectarian:
+      return 'Sectaire Abominable';
+    case Role.DevotedServant:
+      return 'Servante D\u00e9vou\u00e9e';
+    case Role.InfectFather:
+      return 'Infect P\u00e8re des Loups';
+    case Role.DogWolf:
+      return 'Chien-Loup';
     default:
       return role;
   }
@@ -515,6 +575,18 @@ export function rolePowerBlurb(role: Role): string {
       return 'Vous \u00eates **2 joueuses** avec ce r\u00f4le. La **nuit 1**, vous vous reconnaissez dans un **fil priv\u00e9 partag\u00e9**. Pas de pouvoir actif : vous partagez simplement votre identit\u00e9. Vous gagnez avec le **camp Village**.';
     case Role.ThreeBrothers:
       return 'Vous \u00eates **3 joueurs** avec ce r\u00f4le. La **nuit 1**, vous vous reconnaissez dans un **fil priv\u00e9 partag\u00e9**. Pas de pouvoir actif : vous partagez simplement votre identit\u00e9. Vous gagnez avec le **camp Village**.';
+    case Role.Docteur:
+      return 'Vous disposez de **3 charges** de soin. Chaque nuit, vous pouvez prot\u00e9ger un joueur de votre choix (pas de restriction de cible cons\u00e9cutive, contrairement au Garde). Si ce joueur est attaqu\u00e9 par les loups, il survit. Quand vos charges sont \u00e9puis\u00e9es, vous n\u2019agissez plus.';
+    case Role.Necromancer:
+      return 'Chaque nuit, vous pouvez inspecter un **joueur mort** de votre choix et apprendre son **r\u00f4le exact** (dans votre fil priv\u00e9). Pouvoir passif \u2014 vous ne pouvez pas ramener les morts. Vous gagnez avec le **camp Village**.';
+    case Role.Sectarian:
+      return 'Camp **Solo**. Au d\u00e9but du jeu, tous les joueurs sont r\u00e9partis en **deux groupes secrets** (A et B). Vous apprenez votre groupe. Chaque nuit, vous inspectez un joueur et apprenez son groupe. Vous gagnez **seul** quand tous les survivants sont du m\u00eame groupe.';
+    case Role.DevotedServant:
+      return 'R\u00f4le **passif**. Quand vous \u00eates \u00e9limin\u00e9(e), vous pouvez choisir de **ne pas mourir** en prenant le r\u00f4le du **dernier joueur mort avant vous** (annonc\u00e9 publiquement). Vous continuez la partie avec ce nouveau r\u00f4le et ses pouvoirs.';
+    case Role.InfectFather:
+      return 'Camp **Loups**. Vous \u00eates un loup ordinaire, plus \u2014 **une fois par partie**, apr\u00e8s que la meute a d\u00e9sign\u00e9 sa victime, vous pouvez choisir de l\u2019**infecter** plut\u00f4t que de la tuer. La victime devient un loup secr\u00e8tement, rejoint la meute, et le village ne voit pas de mort ce soir-l\u00e0.';
+    case Role.DogWolf:
+      return 'Camp **Sp\u00e9cial**. La **nuit 1**, vous choisissez votre camp : **Village** (vous jouez comme villageois) ou **Loups** (vous rejoignez la meute secr\u00e8tement dans le fil Meute). Le village ne sait pas quel camp vous avez choisi.';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:
@@ -581,6 +653,12 @@ export function formatCompositionReadable(
   if (c.includeBearTamer) lines.push(`\u2022 **${roleLabelFr(Role.BearTamer)}** \u00d7 **1**`);
   if (c.includeTwoSisters) lines.push(`\u2022 **${roleLabelFr(Role.TwoSisters)}** \u00d7 **2**`);
   if (c.includeThreeBrothers) lines.push(`\u2022 **${roleLabelFr(Role.ThreeBrothers)}** \u00d7 **3**`);
+  if (c.includeDocteur) lines.push(`\u2022 **${roleLabelFr(Role.Docteur)}** \u00d7 **1**`);
+  if (c.includeNecromancer) lines.push(`\u2022 **${roleLabelFr(Role.Necromancer)}** \u00d7 **1**`);
+  if (c.includeSectarian) lines.push(`\u2022 **${roleLabelFr(Role.Sectarian)}** \u00d7 **1** _(solo)_`);
+  if (c.includeDevotedServant) lines.push(`\u2022 **${roleLabelFr(Role.DevotedServant)}** \u00d7 **1**`);
+  if (c.includeInfectFather) lines.push(`\u2022 **${roleLabelFr(Role.InfectFather)}** \u00d7 **1** _(loup)_`);
+  if (c.includeDogWolf) lines.push(`\u2022 **${roleLabelFr(Role.DogWolf)}** \u00d7 **1**`);
   if (c.includeLittleGirl) {
     lines.push(`• **${roleLabelFr(Role.LittleGirl)}** × **1**`);
   }
@@ -630,6 +708,12 @@ export function formatCompositionReadable(
     `**Montreur d'Ours** : ${c.includeBearTamer ? "**activ\u00e9** \u2014 l'ours grogne \u00e0 l'aube si un voisin est loup" : "**d\u00e9sactiv\u00e9**"}`,
     `**Deux S\u0153urs** : ${c.includeTwoSisters ? "**activ\u00e9** \u2014 2 joueuses se reconnaissent nuit 1 (fil partag\u00e9)" : "**d\u00e9sactiv\u00e9**"}`,
     `**Trois Fr\u00e8res** : ${c.includeThreeBrothers ? "**activ\u00e9** \u2014 3 joueurs se reconnaissent nuit 1 (fil partag\u00e9)" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Docteur** : ${c.includeDocteur ? "**activ\u00e9** \u2014 3 charges, prot\u00e8ge n'importe quel joueur chaque nuit" : "**d\u00e9sactiv\u00e9**"}`,
+    `**N\u00e9cromancien** : ${c.includeNecromancer ? "**activ\u00e9** \u2014 inspecte un mort/nuit pour conna\u00eetre son r\u00f4le" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Sectaire Abominable** : ${c.includeSectarian ? "**activ\u00e9** \u2014 solo, gagne si tous les survivants sont du m\u00eame groupe" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Servante D\u00e9vou\u00e9e** : ${c.includeDevotedServant ? "**activ\u00e9** \u2014 survit en prenant le r\u00f4le du dernier mort" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Infect P\u00e8re des Loups** : ${c.includeInfectFather ? "**activ\u00e9** \u2014 peut infecter la victime (la transformer en loup) 1 fois" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Chien-Loup** : ${c.includeDogWolf ? "**activ\u00e9** \u2014 choisit son camp nuit 1 (village ou loups)" : "**d\u00e9sactiv\u00e9**"}`,
     `**Grand M\u00e9chant Loup** : ${c.includeBigBadWolf ? "**activ\u00e9** \u2014 extra-kill tant qu\u2019aucun loup n\u2019est mort" : "**d\u00e9sactiv\u00e9**"}`,
     `**Égalité vote → tirage au sort** : ${c.tiebreakerRandom ? '**oui** — un ex-aequo éliminé aléatoirement' : 'non — personne ne meurt'}`,
     `**1re nuit sans meurtre** : ${c.skipFirstNightKill ? '**oui** \u2014 loups se r\u00e9unissent mais n\u2019\u00e9liminent personne nuit 1' : 'non'}`,
@@ -641,6 +725,8 @@ export function formatCompositionReadable(
     `**Annonce des morts** : ${shouldRevealDeadRoles(c) ? 'rôle affiché publiquement' : c.darkNightMode ? 'rôle **jamais** public (nuit sombre)' : 'rôle masqué (seulement la mention)'}`,
   ].join('\n');
 }
+
+
 
 
 

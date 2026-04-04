@@ -24,6 +24,12 @@ export enum Role {
   BearTamer = 'BEAR_TAMER',
   TwoSisters = 'TWO_SISTERS',
   ThreeBrothers = 'THREE_BROTHERS',
+  Docteur = 'DOCTEUR',
+  Necromancer = 'NECROMANCER',
+  Sectarian = 'SECTARIAN',
+  DevotedServant = 'DEVOTED_SERVANT',
+  InfectFather = 'INFECT_FATHER',
+  DogWolf = 'DOG_WOLF',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';
@@ -42,7 +48,12 @@ export type NightSubPhase =
   | 'piedpiper'
   | 'wildchild'
   | 'fox'
-  | 'pyromaniac';
+  | 'pyromaniac'
+  | 'docteur'
+  | 'necromancer'
+  | 'sectarian'
+  | 'infectfather'
+  | 'dogwolf';
 
 export interface PlayerState {
   userId: string;

@@ -49,6 +49,11 @@ import { runFoxPhase } from '../fox';
 import { runPyromaniacPhase } from '../pyromaniac';
 import { initBearTamerNeighbors, checkBearTamerGrowl } from '../bearTamer';
 import { createSistersThread, createBrothersThread } from '../siblings';
+import { runDocteurPhase } from '../docteur';
+import { runNecromancerPhase } from '../necromancer';
+import { initSectarianGroups, runSectarianPhase } from '../sectarian';
+import { runInfectFatherPhase } from '../infectFather';
+import { runDogWolfPhase } from '../dogWolf';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import {
   sendDawnApproaching,
@@ -801,13 +806,41 @@ export async function resolveNightDeaths(
   );
 
   const names: string[] = [];
+  const actualDeadIds: string[] = [];
   for (const id of finalIds) {
+    const p = session.getPlayer(id);
+    if (!p) continue;
+    // Servante D\u00e9vou\u00e9e : intercepte sa propre mort si elle a encore son pouvoir
+    if (
+      p.role === Role.DevotedServant &&
+      !session.devotedServantUsed &&
+      session.lastDeadPlayerRole !== null
+    ) {
+      session.devotedServantUsed = true;
+      const newRole = session.lastDeadPlayerRole;
+      p.role = newRole;
+      await textChannel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('\uD83E\uDDD5 La Servante D\u00e9vou\u00e9e r\u00e9v\u00e8le son identit\u00e9 !')
+            .setDescription(
+              `**${p.displayName}** \u00e9tait la **Servante D\u00e9vou\u00e9e** !\n\n` +
+                `Elle refuse de mourir et prend le r\u00f4le du dernier joueur \u00e9limin\u00e9 \u2014 **${roleLabelFr(newRole)}** \u2014 et continue la partie avec ce r\u00f4le et ses pouvoirs.`
+            )
+            .setColor(0xf39c12),
+        ],
+      });
+      continue; // Ne pas l\u2019ajouter aux morts
+    }
+    // Mise \u00e0 jour du dernier r\u00f4le mort (avant session.kill)
+    session.lastDeadPlayerRole = p.role;
     session.kill(id);
-    names.push(session.getPlayer(id)?.displayName ?? `<@${id}>`);
+    actualDeadIds.push(id);
+    names.push(p.displayName ?? `<@${id}>`);
   }
 
-  if (finalIds.length > 0) {
-    await demotePlayersToStageAudience(textChannel.guild, session, finalIds);
+  if (actualDeadIds.length > 0) {
+    await demotePlayersToStageAudience(textChannel.guild, session, actualDeadIds);
   }
 
   session.pendingNightDeaths = [];
@@ -900,6 +933,21 @@ export async function runNightSequence(
       await initBearTamerNeighbors(client, session);
     }
 
+    // Nuit 1 : initialisation du Sectaire Abominable (groupes A/B)
+    if (session.nightNumber === 1 && session.sectarianId()) {
+      await initSectarianGroups(client, session);
+    }
+
+    // Nuit 1 : Chien-Loup choisit son camp
+    if (session.nightNumber === 1 && session.dogWolfId() && !session.dogWolfChoseSide) {
+      await sendNightBeat(
+        textChannel,
+        'Le Chien-Loup choisit\u2026',
+        'Le **Chien-Loup** choisit son camp cette nuit (Village ou Loups). _\u00b7 fil priv\u00e9._'
+      );
+      await runDogWolfPhase(client, session, textChannel);
+    }
+
     // Nuit 1 : cr\u00e9ation du fil des Deux S\u0153urs
     if (session.nightNumber === 1 && session.sisterIds().length === 2) {
       await sendNightBeat(
@@ -949,6 +997,14 @@ export async function runNightSequence(
       );
     }
     await runGuardPhase(client, session, textChannel);
+    if (session.docteurId() && session.docteurCharges > 0) {
+      await sendNightBeat(
+        textChannel,
+        'Le Docteur soigne\u2026',
+        `Le **Docteur** utilise une de ses charges de protection (**${session.docteurCharges}** restante${session.docteurCharges > 1 ? 's' : ''}). _\u00b7 fil priv\u00e9._`
+      );
+    }
+    await runDocteurPhase(client, session, textChannel);
 
     if (session.wolfIds().length > 0) {
       const pf = session.littleGirlId()
@@ -989,6 +1045,14 @@ export async function runNightSequence(
       );
     }
     await runBigBadWolfPhase(client, session, textChannel);
+    if (session.infectFatherId() && !session.infectFatherUsed && session.wolfTargetId) {
+      await sendNightBeat(
+        textChannel,
+        'Infect P\u00e8re des Loups\u2026',
+        'L\u2019**Infect P\u00e8re des Loups** peut choisir d\u2019infecter la victime plut\u00f4t que de la tuer. _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runInfectFatherPhase(client, session, textChannel);
 
     if (session.whiteWerewolfId() && session.nightNumber % 2 === 0) {
       await sendNightBeat(
@@ -1025,6 +1089,26 @@ export async function runNightSequence(
       );
     }
     await runPyromaniacPhase(client, session, textChannel);
+    if (session.necromancerId()) {
+      const deadCount = [...session.players.values()].filter(p => !p.alive).length;
+      if (deadCount > 0) {
+        await sendNightBeat(
+          textChannel,
+          'Le N\u00e9cromancien consulte\u2026',
+          'Le **N\u00e9cromancien** inspecte un mort pour conna\u00eetre son r\u00f4le exact. _\u00b7 fil priv\u00e9._'
+        );
+      }
+    }
+    await runNecromancerPhase(client, session, textChannel);
+
+    if (session.sectarianId()) {
+      await sendNightBeat(
+        textChannel,
+        'Le Sectaire Abominable inspecte\u2026',
+        'Le **Sectaire Abominable** inspecte un joueur pour conna\u00eetre son groupe. _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runSectarianPhase(client, session, textChannel);
 
     await sendDawnApproaching(textChannel, session);
     await checkBearTamerGrowl(session, textChannel);
@@ -1086,4 +1170,6 @@ export function fulfillWitchSave(channelId: string, choice: 'yes' | 'no'): boole
 export function fulfillWitchKill(channelId: string, targetOrSkip: string): boolean {
   return fulfillPending(witchKillKey(channelId), targetOrSkip);
 }
+
+
 

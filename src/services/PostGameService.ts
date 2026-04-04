@@ -61,7 +61,7 @@ function canUsePostGameButtons(
   return false;
 }
 
-export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac';
+export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac' | 'sectarian';
 
 /** Joueurs du camp victorieux (vivants ou morts), selon le rôle final en base. */
 function winningUserIds(session: GameSession, win: GameOverWin): string[] {
@@ -83,6 +83,9 @@ function winningUserIds(session: GameSession, win: GameOverWin): string[] {
   }
   if (win === 'pyromaniac') {
     return players.filter((p) => p.role === Role.Pyromaniac).map((p) => p.userId);
+  }
+  if (win === 'sectarian') {
+    return players.filter((p) => p.role === Role.Sectarian).map((p) => p.userId);
   }
   const lg = session.loversGroup;
   if (lg && lg.length >= 2) {
@@ -134,7 +137,9 @@ function buildSummaryField(session: GameSession, win: GameOverWin): string {
               ? '**Joueur de Fl\u00fbte** (solo \u2014 tous ensorcel\u00e9s)'
               : win === 'pyromaniac'
                 ? '**Pyromane** (solo \u2014 tous arros\u00e9s / incendi\u00e9s)'
-                : '**Amoureux**';
+                : win === 'sectarian'
+                  ? '**Sectaire Abominable** (solo \u2014 tous les survivants du m\u00eame groupe)'
+                  : '**Amoureux**';
 
   const header = [
     `**Nuits** : **${nights}** · **Joueurs** : **${n}** · **Survivants** : **${aliveN}**`,
@@ -193,7 +198,9 @@ export async function presentGameOverPanel(
               ? '**Le Joueur de Fl\u00fbte** a ensorcel\u00e9 tous les survivants \u2014 il remporte la partie **seul** !'
               : win === 'pyromaniac'
                 ? '**Le Pyromane** a tout incendi\u00e9 \u2014 il remporte la partie **seul** !'
-                : '**Le village** remporte la partie.';
+                : win === 'sectarian'
+                  ? '**Le Sectaire Abominable** a r\u00e9ussi \u00e0 r\u00e9unir tous les survivants dans son groupe \u2014 il remporte la partie **seul** !'
+                  : '**Le village** remporte la partie.';
 
   const color =
     win === 'wolves'
@@ -206,7 +213,9 @@ export async function presentGameOverPanel(
             ? 0x9b59b6
             : win === 'pyromaniac'
               ? 0xe74c3c
-              : 0x57f287;
+              : win === 'sectarian'
+                ? 0x8e44ad
+                : 0x57f287;
 
     const embed = new EmbedBuilder()
     .setTitle('Partie terminée')

@@ -414,14 +414,43 @@ export async function startDayPhase(
             ? `\u00c9limin\u00e9s :\n${formatDeathAnnounces(session, finalDeaths, true)}`
             : `\u00c9limin\u00e9s : ${finalDeaths.map((id) => `<@${id}>`).join(', ')}`;
 
-      for (const id of finalDeaths) session.kill(id);
-      if (finalDeaths.length > 0) {
+      const actualDayDeaths: string[] = [];
+      for (const id of finalDeaths) {
+        const dp = session.getPlayer(id);
+        if (!dp) { session.kill(id); actualDayDeaths.push(id); continue; }
+        // Servante D\u00e9vou\u00e9e : intercepte sa propre \u00e9limination (vote ou autre)
+        if (
+          dp.role === Role.DevotedServant &&
+          !session.devotedServantUsed &&
+          session.lastDeadPlayerRole !== null
+        ) {
+          session.devotedServantUsed = true;
+          const newRole = session.lastDeadPlayerRole;
+          dp.role = newRole;
+          await textChannel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setTitle('\uD83E\uDDD5 La Servante D\u00e9vou\u00e9e r\u00e9v\u00e8le son identit\u00e9 !')
+                .setDescription(
+                  `**${dp.displayName}** \u00e9tait la **Servante D\u00e9vou\u00e9e** !\n\n` +
+                    `Elle refuse de mourir et prend le r\u00f4le **${roleLabelFr(newRole)}** du dernier \u00e9limin\u00e9, et continue la partie avec ce r\u00f4le et ses pouvoirs.`
+                )
+                .setColor(0xf39c12),
+            ],
+          });
+          continue;
+        }
+        session.lastDeadPlayerRole = dp.role;
+        session.kill(id);
+        actualDayDeaths.push(id);
+      }
+      if (actualDayDeaths.length > 0) {
         await demotePlayersToStageAudience(
           textChannel.guild,
           session,
-          finalDeaths
+          actualDayDeaths
         );
-        await checkWildChildTransform(client, session, textChannel, finalDeaths);
+        await checkWildChildTransform(client, session, textChannel, actualDayDeaths);
       }
 
       let voteEmbed = publicEmbed('R\u00e9sultat du vote', desc).setColor(0xe67e22);

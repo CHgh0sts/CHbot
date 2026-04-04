@@ -49,6 +49,11 @@ import { fulfillWildChild } from './game/wildChild';
 import { fulfillScapegoat } from './game/scapegoat';
 import { fulfillFox } from './game/fox';
 import { fulfillPyromaniac, fulfillPyromaniacIgnite } from './game/pyromaniac';
+import { fulfillDocteur } from './game/docteur';
+import { fulfillNecromancer } from './game/necromancer';
+import { fulfillSectarian } from './game/sectarian';
+import { fulfillInfectFather } from './game/infectFather';
+import { fulfillDogWolf } from './game/dogWolf';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -199,6 +204,12 @@ client.on(Events.MessageCreate, async (message) => {
         includeBearTamer: null,
         includeTwoSisters: null,
         includeThreeBrothers: null,
+        includeDocteur: null,
+        includeNecromancer: null,
+        includeSectarian: null,
+        includeDevotedServant: null,
+        includeInfectFather: null,
+        includeDogWolf: null,
         tiebreakerRandom: null,
         skipFirstNightKill: null,
         revealDeadRoles: null,
@@ -407,6 +418,12 @@ async function handleSlash(
       includeBearTamer: interaction.options.getBoolean('montreur_ours'),
       includeTwoSisters: interaction.options.getBoolean('deux_soeurs'),
       includeThreeBrothers: interaction.options.getBoolean('trois_freres'),
+      includeDocteur: interaction.options.getBoolean('docteur'),
+      includeNecromancer: interaction.options.getBoolean('necromancien'),
+      includeSectarian: interaction.options.getBoolean('sectaire_abominable'),
+      includeDevotedServant: interaction.options.getBoolean('servante_devouee'),
+      includeInfectFather: interaction.options.getBoolean('infect_pere_loups'),
+      includeDogWolf: interaction.options.getBoolean('chien_loup'),
       tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
       skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
@@ -621,6 +638,21 @@ async function handleSelect(
     if (interaction.user.id !== pyroId) return;
     fulfillPyromaniac(channelId, target);
   }
+
+  if (kind === 'docteur') {
+    if (interaction.user.id !== session.docteurId()) return;
+    fulfillDocteur(channelId, target);
+  }
+
+  if (kind === 'necromancer') {
+    if (interaction.user.id !== session.necromancerId()) return;
+    fulfillNecromancer(channelId, target);
+  }
+
+  if (kind === 'sectarian') {
+    if (interaction.user.id !== session.sectarianId()) return;
+    fulfillSectarian(channelId, target);
+  }
 }
 
 async function handleButton(
@@ -789,6 +821,22 @@ async function handleButton(
     if (interaction.user.id !== pyroId) return;
     await interaction.deferUpdate().catch(() => null);
     fulfillPyromaniacIgnite(channelId);
+  }
+
+  if (parts[2] === 'infectfather') {
+    const infectId = session.infectFatherId();
+    if (interaction.user.id !== infectId) return;
+    await interaction.deferUpdate().catch(() => null);
+    const choice = parts[3] ?? 'skip';
+    fulfillInfectFather(channelId, choice);
+  }
+
+  if (parts[2] === 'dogwolf') {
+    const dogId = session.dogWolfId();
+    if (interaction.user.id !== dogId) return;
+    await interaction.deferUpdate().catch(() => null);
+    const choice = parts[3] ?? 'village';
+    fulfillDogWolf(channelId, choice);
   }
 }
 

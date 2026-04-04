@@ -125,6 +125,37 @@ export function buildNightRoadmap(session: GameSession): string {
     lines.push(`_(passif) **Montreur d'Ours** \u2014 l\u2019ours grognera \u00e0 l\u2019aube si un voisin est loup_`);
   }
 
+  if (session.nightNumber === 1 && session.dogWolfId() && !session.dogWolfChoseSide) {
+    lines.push(`${i++}. **Chien-Loup** \u2014 choisit son camp (Village ou Loups, nuit 1) _\u00b7 fil priv\u00e9_`);
+  }
+
+  if (session.nightNumber === 1 && session.sectarianId()) {
+    lines.push(`_(passif) **Sectaire Abominable** \u2014 r\u00e9partition des groupes secrets (nuit 1)_`);
+  }
+
+  if (session.docteurId() && session.docteurCharges > 0) {
+    lines.push(`${i++}. **Docteur** \u2014 prot\u00e8ge un joueur (${session.docteurCharges} charge${session.docteurCharges > 1 ? 's' : ''} restante${session.docteurCharges > 1 ? 's' : ''}) _\u00b7 fil priv\u00e9_`);
+  }
+
+  if (session.infectFatherId() && !session.infectFatherUsed) {
+    lines.push(`_(Infect P\u00e8re des Loups) \u2014 peut infecter la victime des loups (1 fois) \u00b7 fil priv\u00e9_`);
+  }
+
+  if (session.necromancerId()) {
+    const deadCount = [...session.players.values()].filter(p => !p.alive).length;
+    if (deadCount > 0) {
+      lines.push(`${i++}. **N\u00e9cromancien** \u2014 inspecte un mort pour conna\u00eetre son r\u00f4le _\u00b7 fil priv\u00e9_`);
+    }
+  }
+
+  if (session.sectarianId() && session.sectarianGroups.size > 0) {
+    lines.push(`${i++}. **Sectaire Abominable** \u2014 inspecte le groupe d\u2019un joueur vivant _\u00b7 fil priv\u00e9_`);
+  }
+
+  if (session.devotedServantId() && !session.devotedServantUsed) {
+    lines.push(`_(passif) **Servante D\u00e9vou\u00e9e** \u2014 si \u00e9limin\u00e9e, prend le r\u00f4le du dernier mort_`);
+  }
+
   const beforeAube = lines.length;
   lines.push(`${i}. **Aube** — révélation des morts et suite de la partie`);
 

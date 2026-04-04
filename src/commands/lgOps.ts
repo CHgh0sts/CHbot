@@ -562,6 +562,12 @@ export async function runLgConfig(
     options.includeBearTamer !== null ||
     options.includeTwoSisters !== null ||
     options.includeThreeBrothers !== null ||
+    options.includeDocteur !== null ||
+    options.includeNecromancer !== null ||
+    options.includeSectarian !== null ||
+    options.includeDevotedServant !== null ||
+    options.includeInfectFather !== null ||
+    options.includeDogWolf !== null ||
     options.tiebreakerRandom !== null ||
     options.skipFirstNightKill !== null ||
     options.revealDeadRoles !== null ||
@@ -638,6 +644,12 @@ export async function runLgConfig(
   if (options.includeBearTamer !== null) c.includeBearTamer = options.includeBearTamer;
   if (options.includeTwoSisters !== null) c.includeTwoSisters = options.includeTwoSisters;
   if (options.includeThreeBrothers !== null) c.includeThreeBrothers = options.includeThreeBrothers;
+  if (options.includeDocteur !== null) c.includeDocteur = options.includeDocteur;
+  if (options.includeNecromancer !== null) c.includeNecromancer = options.includeNecromancer;
+  if (options.includeSectarian !== null) c.includeSectarian = options.includeSectarian;
+  if (options.includeDevotedServant !== null) c.includeDevotedServant = options.includeDevotedServant;
+  if (options.includeInfectFather !== null) c.includeInfectFather = options.includeInfectFather;
+  if (options.includeDogWolf !== null) c.includeDogWolf = options.includeDogWolf;
   if (options.tiebreakerRandom !== null) c.tiebreakerRandom = options.tiebreakerRandom;
   if (options.skipFirstNightKill !== null) c.skipFirstNightKill = options.skipFirstNightKill;
   if (options.revealDeadRoles !== null) c.revealDeadRoles = options.revealDeadRoles;
@@ -674,7 +686,13 @@ export async function runLgConfig(
     options.includePyromaniac !== null ||
     options.includeBearTamer !== null ||
     options.includeTwoSisters !== null ||
-    options.includeThreeBrothers !== null;
+    options.includeThreeBrothers !== null ||
+    options.includeDocteur !== null ||
+    options.includeNecromancer !== null ||
+    options.includeSectarian !== null ||
+    options.includeDevotedServant !== null ||
+    options.includeInfectFather !== null ||
+    options.includeDogWolf !== null;
 
   if (options.villageoisAuto === true) {
     c.villagerCount = null;

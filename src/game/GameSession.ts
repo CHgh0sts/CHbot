@@ -134,6 +134,27 @@ export class GameSession {
   /** Fil priv\u00e9 partag\u00e9 par les Trois Fr\u00e8res. */
   brothersThreadId: string | null = null;
 
+  /** Charges restantes du Docteur (3 au d\u00e9part). */
+  docteurCharges = 3;
+
+  /** Groupes du Sectaire Abominable : Map<userId, 'A' | 'B'>. Assign\u00e9 nuit 1. */
+  sectarianGroups: Map<string, 'A' | 'B'> = new Map();
+
+  /** 	rue une fois que la Servante D\u00e9vou\u00e9e a utilis\u00e9 son pouvoir. */
+  devotedServantUsed = false;
+  /** R\u00f4le du dernier joueur \u00e9limin\u00e9 (mis \u00e0 jour \u00e0 chaque mort). */
+  lastDeadPlayerRole: Role | null = null;
+
+  /** 	rue une fois que l\u2019Infect P\u00e8re des Loups a utilis\u00e9 son pouvoir. */
+  infectFatherUsed = false;
+  /** L\u2019ID du joueur infect\u00e9 ce soir (si Infect P\u00e8re a agi). */
+  infectFatherInfectedId: string | null = null;
+
+  /** Camp choisi par le Chien-Loup nuit 1 : true = loups. */
+  dogWolfIsWolf = false;
+  /** 	rue si le Chien-Loup a d\u00e9j\u00e0 fait son choix. */
+  dogWolfChoseSide = false;
+
   /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
    * Inchangé si le garde n’a pas joué (timeout).
@@ -176,8 +197,9 @@ export class GameSession {
   }
 
   isWolfRole(role: Role): boolean {
-    if (role === Role.Werewolf || role === Role.BigBadWolf || role === Role.WhiteWerewolf) return true;
+    if (role === Role.Werewolf || role === Role.BigBadWolf || role === Role.WhiteWerewolf || role === Role.InfectFather) return true;
     if (role === Role.WildChild && this.wildChildBecameWolf) return true;
+    if (role === Role.DogWolf && this.dogWolfIsWolf) return true;
     return false;
   }
 
@@ -346,6 +368,30 @@ export class GameSession {
       .map((x) => x.userId);
   }
 
+  docteurId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.Docteur && x.alive)?.userId;
+  }
+
+  necromancerId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.Necromancer && x.alive)?.userId;
+  }
+
+  sectarianId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.Sectarian && x.alive)?.userId;
+  }
+
+  devotedServantId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.DevotedServant && x.alive)?.userId;
+  }
+
+  infectFatherId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.InfectFather && x.alive)?.userId;
+  }
+
+  dogWolfId(): string | undefined {
+    return [...this.players.values()].find((x) => x.role === Role.DogWolf && x.alive)?.userId;
+  }
+
   getPlayer(userId: string): PlayerState | undefined {
     return this.players.get(userId);
   }
@@ -373,7 +419,7 @@ export class GameSession {
    * Les **Amoureux** gagnent s’ils sont **seuls** derniers survivants du lien
    * (couple ou ménage à trois). Sinon règle loups / village.
    */
-  checkVictory(): 'wolves' | 'village' | 'lovers' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac' | null {
+  checkVictory(): 'wolves' | 'village' | 'lovers' | 'whitewerewolf' | 'piedpiper' | 'pyromaniac' | 'sectarian' | null {
     const alive = this.alivePlayers();
     const aliveIds = new Set(alive.map((p) => p.userId));
 
@@ -398,6 +444,13 @@ export class GameSession {
       if (nonPiper.length > 0 && nonPiper.every((p) => this.enchantedPlayerIds.has(p.userId))) return 'piedpiper';
     }
 
+
+    // Sectaire Abominable solo : tous les survivants dans le m\u00eame groupe
+    const sectarianId = this.sectarianId();
+    if (sectarianId && this.sectarianGroups.size > 0) {
+      const groups = new Set(alive.map((p) => this.sectarianGroups.get(p.userId)));
+      if (groups.size === 1) return 'sectarian';
+    }
     if (this.loversGroup && this.loversGroup.length >= 2) {
       const lg = this.loversGroup;
       const loversAlive = lg.filter((id) => aliveIds.has(id));
@@ -479,6 +532,14 @@ export class GameSession {
     this.bearTamerNeighborIds = [];
     this.sistersThreadId = null;
     this.brothersThreadId = null;
+    this.docteurCharges = 3;
+    this.sectarianGroups = new Map();
+    this.devotedServantUsed = false;
+    this.lastDeadPlayerRole = null;
+    this.infectFatherUsed = false;
+    this.infectFatherInfectedId = null;
+    this.dogWolfIsWolf = false;
+    this.dogWolfChoseSide = false;
   }
 
   async hydrateDisplayNames(client: Client): Promise<void> {
@@ -517,5 +578,7 @@ export class GameSession {
     return roleLabelFr(role);
   }
 }
+
+
 
 
