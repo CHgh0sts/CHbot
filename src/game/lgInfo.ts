@@ -400,14 +400,14 @@ const CAMP_EMOJI: Record<string, string> = {
 export async function handleLgInfo(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
+  // Acknowledger imm\u00e9diatement pour \u00e9viter l\u2019expiration du token (10062)
+  await interaction.deferReply().catch(() => null);
+
   const roleKey = interaction.options.getString('role', true);
   const info = ROLE_INFO[roleKey];
 
   if (!info) {
-    await interaction.reply({
-      content: '\u274C R\u00f4le inconnu.',
-      flags: 64,
-    });
+    await interaction.editReply({ content: '\u274C R\u00f4le inconnu. Tapez le nom du r\u00f4le dans le champ (ex : voyante, hackeur, loups-garous\u2026)' });
     return;
   }
 
@@ -416,9 +416,7 @@ export async function handleLgInfo(
   const embed = new EmbedBuilder()
     .setTitle(`${info.emoji}  ${info.name}`)
     .setColor(info.campColor)
-    .setDescription(
-      `${campBadge}\n\n${info.power}`
-    )
+    .setDescription(`${campBadge}\n\n${info.power}`)
     .addFields(
       { name: '\uD83C\uDF19 Quand agit-il ?', value: info.timing, inline: false },
       { name: '\uD83C\uDFC6 Condition de victoire', value: info.victory, inline: false }
@@ -430,7 +428,7 @@ export async function handleLgInfo(
 
   embed.setFooter({ text: 'Loup-Garou de Thiercelieux \u2022 /lg-info' });
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.editReply({ embeds: [embed] });
 }
 
 
