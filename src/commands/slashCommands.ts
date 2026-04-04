@@ -25,8 +25,7 @@ export const slashCommands = [
   },
   {
     name: 'lg-config',
-    description:
-      'Config partie : joueurs, loups, roles classiques, modes de jeu. Voir aussi /lg-roles pour les roles optionnels.',
+    description: 'Config : joueurs, loups, roles classiques, modes de jeu. Voir /lg-roles pour les roles optionnels.',
     options: [
       { name: 'min_joueurs', description: 'Nombre minimum de joueurs pour lancer (4-18)', type: 4, min_value: 4, max_value: 18, required: false },
       { name: 'loups', description: 'Nombre de Loups-Garous (sinon auto)', type: 4, min_value: 1, max_value: 10, required: false },
@@ -56,8 +55,7 @@ export const slashCommands = [
   },
   {
     name: 'lg-roles',
-    description:
-      'Activer/desactiver les roles optionnels/extensions. Voir aussi /lg-config pour les reglages generaux.',
+    description: 'Roles optionnels/extensions (Docteur, Hackeur, Dictateur...). Voir /lg-config pour les reglages.',
     options: [
       { name: 'petite_fille', description: 'Petite Fille : peut espionner le vote des loups (50% reperage = mort)', type: 5, required: false },
       { name: 'corbeau', description: 'Corbeau : marque 1 joueur/nuit qui recoit +2 votes au vote suivant', type: 5, required: false },
