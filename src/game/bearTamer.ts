@@ -1,4 +1,4 @@
-import type { Client, GuildTextBasedChannel } from 'discord.js';
+﻿import type { Client, GuildTextBasedChannel } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import type { GameSession } from './GameSession';
 import { sendInPlayerSecretThread } from '../services/SecretThreadService';
@@ -6,7 +6,7 @@ import { sendInPlayerSecretThread } from '../services/SecretThreadService';
 const BEAR_COLOR = 0x8b4513;
 
 /**
- * Nuit 1 : assigne 2 voisins al\u00e9atoires \u00e0 l\u2019Ours de Monsieur Ours et l\u2019en informe.
+ * Nuit 1 : assigne 2 voisins al\u00e9atoires \u00e0 l\u2019Montreur d'Ours et l\u2019en informe.
  */
 export async function initBearTamerNeighbors(
   client: Client,
@@ -28,7 +28,7 @@ export async function initBearTamerNeighbors(
   await sendInPlayerSecretThread(client, session, bearId, {
     embeds: [
       new EmbedBuilder()
-        .setTitle('Ours de Monsieur Ours \u2014 Voisins secrets')
+        .setTitle("Montreur d\u2019Ours \u2014 Voisins secrets")
         .setDescription(
           `\u{1F43B} Tes **voisins secrets** (assign\u00e9s pour toute la partie) sont :\n\n` +
             names.map((n) => `\u2022 **${n}**`).join('\n') +
@@ -60,8 +60,8 @@ export async function checkBearTamerGrowl(
         new EmbedBuilder()
           .setTitle('\u{1F43B} L\u2019ours grogne !')
           .setDescription(
-            'Ce matin, l\u2019ours de Monsieur Ours **grogne** avec force.\n' +
-              '_L\u2019un des voisins secrets de Monsieur Ours est un **loup-garou**._'
+            "Ce matin, le **Montreur d\u2019Ours** grogne avec force.\n" +
+              "_L\u2019un des voisins secrets du **Montreur d\u2019Ours** est un **loup-garou**._"
           )
           .setColor(BEAR_COLOR),
       ],
@@ -69,3 +69,6 @@ export async function checkBearTamerGrowl(
   }
   // Pas d'annonce si silencieux (le silence est aussi informatif, mais pour ne pas trop guider)
 }
+
+
+

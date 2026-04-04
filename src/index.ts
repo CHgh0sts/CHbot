@@ -1,4 +1,4 @@
-import {
+﻿import {
   Client,
   Events,
   GatewayIntentBits,
@@ -398,7 +398,7 @@ async function handleSlash(
       includeWildChild: interaction.options.getBoolean('enfant_sauvage'),
       includeFox: interaction.options.getBoolean('renard'),
       includePyromaniac: interaction.options.getBoolean('pyromane'),
-      includeBearTamer: interaction.options.getBoolean('ours_monsieur_ours'),
+      includeBearTamer: interaction.options.getBoolean('montreur_ours'),
       includeTwoSisters: interaction.options.getBoolean('deux_soeurs'),
       includeThreeBrothers: interaction.options.getBoolean('trois_freres'),
       tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
@@ -855,3 +855,4 @@ client.login(discordToken).catch((err: unknown) => {
   }
   process.exit(1);
 });
+

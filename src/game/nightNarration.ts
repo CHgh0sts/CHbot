@@ -122,7 +122,7 @@ export function buildNightRoadmap(session: GameSession): string {
   }
 
   if (session.bearTamerId()) {
-    lines.push(`_(passif) **Ours de Monsieur Ours** \u2014 l\u2019ours grognera \u00e0 l\u2019aube si un voisin est loup_`);
+    lines.push(`_(passif) **Montreur d'Ours** \u2014 l\u2019ours grognera \u00e0 l\u2019aube si un voisin est loup_`);
   }
 
   const beforeAube = lines.length;
@@ -199,3 +199,4 @@ export async function sendDawnApproaching(
     NIGHT_TALE
   );
 }
+

@@ -126,7 +126,7 @@ export class GameSession {
   /** `true` une fois que le Pyromane a d\u00e9clench\u00e9 l\u2019incendie. */
   pyromaniacIgnited = false;
 
-  /** IDs des 2 voisins secrets de l\u2019Ours de Monsieur Ours (assign\u00e9s nuit 1). */
+  /** IDs des 2 voisins secrets de l\u2019Montreur d'Ours (assign\u00e9s nuit 1). */
   bearTamerNeighborIds: string[] = [];
 
   /** Fil priv\u00e9 partag\u00e9 par les Deux S\u0153urs. */
@@ -517,4 +517,5 @@ export class GameSession {
     return roleLabelFr(role);
   }
 }
+
 

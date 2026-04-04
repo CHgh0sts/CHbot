@@ -1,4 +1,4 @@
-import { randomInt } from 'node:crypto';
+﻿import { randomInt } from 'node:crypto';
 import type {
   AttachmentBuilder,
   Client,
@@ -895,7 +895,7 @@ export async function runNightSequence(
     }
     await runWildChildPhase(client, session, textChannel);
 
-    // Nuit 1 : initialisation de l'Ours de Monsieur Ours
+    // Nuit 1 : initialisation de l'Montreur d'Ours
     if (session.nightNumber === 1 && session.bearTamerId()) {
       await initBearTamerNeighbors(client, session);
     }
@@ -1086,3 +1086,4 @@ export function fulfillWitchSave(channelId: string, choice: 'yes' | 'no'): boole
 export function fulfillWitchKill(channelId: string, targetOrSkip: string): boolean {
   return fulfillPending(witchKillKey(channelId), targetOrSkip);
 }
+

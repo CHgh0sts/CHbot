@@ -1,4 +1,4 @@
-import { PermissionFlagsBits } from 'discord.js';
+﻿import { PermissionFlagsBits } from 'discord.js';
 
 /** Définition unique : utilisée par `deploy`, l’enregistrement au démarrage et la doc */
 export const slashCommands = [
@@ -189,9 +189,9 @@ export const slashCommands = [
         required: false,
       },
       {
-        name: 'ours_monsieur_ours',
+        name: 'montreur_ours',
         description:
-          "Ours de Monsieur Ours : oui = l'ours grogne \u00e0 l'aube si un voisin secret est un loup (passif, camp Village)",
+          "Montreur d'Ours : oui = l'ours grogne \u00e0 l'aube si un voisin secret est un loup (passif, camp Village)",
         type: 5,
         required: false,
       },
@@ -311,3 +311,5 @@ export const slashCommands = [
       '[Dev] Envoie des messages fictifs pour prévisualiser le rendu des annonces (salon actuel)',
   },
 ];
+
+

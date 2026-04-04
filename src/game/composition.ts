@@ -52,7 +52,7 @@ export interface CompositionConfig {
   includeFox: boolean;
   /** **Pyromane** : camp Solo. Chaque nuit, arrose 1 joueur. Peut déclencher l'incendie pour tuer tous les arrosés en une seule fois. Gagne seul si tous les survivants (sauf lui) sont arrosés. */
   includePyromaniac: boolean;
-  /** **Ours de Monsieur Ours** : camp Village. À chaque aube, si l'un de ses 2 voisins secrets (tirés au sort nuit 1) est un loup vivant, l'ours grogne publiquement. Rôle passif. */
+  /** **Montreur d'Ours** : camp Village. À chaque aube, si l'un de ses 2 voisins secrets (tirés au sort nuit 1) est un loup vivant, l'ours grogne publiquement. Rôle passif. */
   includeBearTamer: boolean;
   /** **Deux Sœurs** : camp Village × 2. La nuit 1, elles se reconnaissent via un fil partagé (comme les amoureux, sans mourir ensemble). */
   includeTwoSisters: boolean;
@@ -456,7 +456,7 @@ export function roleLabelFr(role: Role): string {
     case Role.Pyromaniac:
       return 'Pyromane';
     case Role.BearTamer:
-      return 'Ours de Monsieur Ours';
+      return 'Montreur d\u2019Ours';
     case Role.TwoSisters:
       return 'Deux S\u0153urs';
     case Role.ThreeBrothers:
@@ -627,7 +627,7 @@ export function formatCompositionReadable(
     `**Enfant Sauvage** : ${c.includeWildChild ? "**activ\u00e9** \u2014 rejoint les loups si son mod\u00e8le meurt" : "**d\u00e9sactiv\u00e9**"}`,
     `**Renard** : ${c.includeFox ? "**activ\u00e9** \u2014 flairer 3 joueurs/nuit, perd le pouvoir si aucun loup parmi eux" : "**d\u00e9sactiv\u00e9**"}`,
     `**Pyromane** : ${c.includePyromaniac ? "**activ\u00e9** \u2014 arrose 1 joueur/nuit, incendie pour tuer tous les arros\u00e9s" : "**d\u00e9sactiv\u00e9**"}`,
-    `**Ours de Monsieur Ours** : ${c.includeBearTamer ? "**activ\u00e9** \u2014 l'ours grogne \u00e0 l'aube si un voisin est loup" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Montreur d'Ours** : ${c.includeBearTamer ? "**activ\u00e9** \u2014 l'ours grogne \u00e0 l'aube si un voisin est loup" : "**d\u00e9sactiv\u00e9**"}`,
     `**Deux S\u0153urs** : ${c.includeTwoSisters ? "**activ\u00e9** \u2014 2 joueuses se reconnaissent nuit 1 (fil partag\u00e9)" : "**d\u00e9sactiv\u00e9**"}`,
     `**Trois Fr\u00e8res** : ${c.includeThreeBrothers ? "**activ\u00e9** \u2014 3 joueurs se reconnaissent nuit 1 (fil partag\u00e9)" : "**d\u00e9sactiv\u00e9**"}`,
     `**Grand M\u00e9chant Loup** : ${c.includeBigBadWolf ? "**activ\u00e9** \u2014 extra-kill tant qu\u2019aucun loup n\u2019est mort" : "**d\u00e9sactiv\u00e9**"}`,
@@ -641,6 +641,8 @@ export function formatCompositionReadable(
     `**Annonce des morts** : ${shouldRevealDeadRoles(c) ? 'rôle affiché publiquement' : c.darkNightMode ? 'rôle **jamais** public (nuit sombre)' : 'rôle masqué (seulement la mention)'}`,
   ].join('\n');
 }
+
+
 
 
 
