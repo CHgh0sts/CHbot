@@ -51,6 +51,7 @@ import { fulfillFox } from './game/fox';
 import { fulfillPyromaniac, fulfillPyromaniacIgnite } from './game/pyromaniac';
 import { fulfillDocteur } from './game/docteur';
 import { fulfillSectarian } from './game/sectarian';
+import { fulfillDevotedServant } from './game/devotedServant';
 import { fulfillInfectFather } from './game/infectFather';
 import { fulfillDogWolf } from './game/dogWolf';
 import { fulfillHunterSelect } from './game/hunter';
@@ -815,6 +816,13 @@ async function handleButton(
     if (interaction.user.id !== pyroId) return;
     await interaction.deferUpdate().catch(() => null);
     fulfillPyromaniacIgnite(channelId);
+  }
+
+  if (parts[2] === 'devotedservant') {
+    const servantId = session.devotedServantId();
+    if (interaction.user.id !== servantId) return;
+    await interaction.deferUpdate().catch(() => null);
+    fulfillDevotedServant(channelId, parts[3] ?? 'no');
   }
 
   if (parts[2] === 'infectfather') {

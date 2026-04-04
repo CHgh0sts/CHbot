@@ -582,7 +582,7 @@ export function rolePowerBlurb(role: Role): string {
     case Role.Sectarian:
       return 'Camp **Solo**. Au d\u00e9but du jeu, tous les joueurs sont r\u00e9partis en **deux groupes secrets** (A et B). Vous apprenez votre groupe. Chaque nuit, vous inspectez un joueur et apprenez son groupe. Vous gagnez **seul** quand tous les survivants sont du m\u00eame groupe.';
     case Role.DevotedServant:
-      return 'R\u00f4le **passif**. Quand vous \u00eates \u00e9limin\u00e9(e), vous pouvez choisir de **ne pas mourir** en prenant le r\u00f4le du **dernier joueur mort avant vous** (annonc\u00e9 publiquement). Vous continuez la partie avec ce nouveau r\u00f4le et ses pouvoirs.';
+      return 'Apr\u00e8s chaque **vote du village**, la Servante re\u00e7oit un message priv\u00e9 lui demandant si elle veut **prendre la place** de la personne \u00e9limin\u00e9e. Si oui : elle se d\u00e9voile publiquement, prend le r\u00f4le de la victime et continue la partie. La victime est quand m\u00eame \u00e9limin\u00e9e. Pouvoir \u00e0 **usage unique**.';
     case Role.InfectFather:
       return 'Camp **Loups**. Vous \u00eates un loup ordinaire, plus \u2014 **une fois par partie**, apr\u00e8s que la meute a d\u00e9sign\u00e9 sa victime, vous pouvez choisir de l\u2019**infecter** plut\u00f4t que de la tuer. La victime devient un loup secr\u00e8tement, rejoint la meute, et le village ne voit pas de mort ce soir-l\u00e0.';
     case Role.DogWolf:

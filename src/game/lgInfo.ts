@@ -335,10 +335,10 @@ const ROLE_INFO: Record<string, RoleInfo> = {
     emoji: '\uD83E\uDDD5',
     camp: 'Village',
     campColor: 0xf39c12,
-    power: 'R\u00f4le passif. Quand elle est \u00e9limin\u00e9e (nuit ou vote), elle peut choisir de **ne pas mourir** en prenant le r\u00f4le du **dernier joueur \u00e9limin\u00e9 avant elle**. Elle continue la partie avec ce nouveau r\u00f4le et ses pouvoirs. L\u2019identit\u00e9 est r\u00e9v\u00e9l\u00e9e publiquement.',
-    timing: 'Passif \u2014 d\u00e9clenche automatiquement au moment de l\u2019\u00e9limination.',
+    power: 'Apr\u00e8s chaque **vote du village**, la Servante D\u00e9vou\u00e9e re\u00e7oit un message priv\u00e9 lui demandant si elle veut **prendre la place** de la personne \u00e9limin\u00e9e. Si oui : elle se d\u00e9voile publiquement, prend le r\u00f4le de cette personne et continue la partie. La victime originale est tout de m\u00eame \u00e9limin\u00e9e. Pouvoir \u00e0 usage unique.',
+    timing: 'Apr\u00e8s chaque vote du village, en fil priv\u00e9 (45 secondes pour r\u00e9pondre).',
     victory: 'D\u00e9pend du r\u00f4le adopt\u00e9 apr\u00e8s transformation.',
-    tip: 'Si le dernier mort \u00e9tait un Loup, vous devenez loup ! Attendez que le dernier mort soit un r\u00f4le Village puissant (Voyante, Sorci\u00e8re) avant de vous faire \u00e9liminer.',
+    tip: 'Attendez qu\u2019un r\u00f4le puissant soit vot\u00e9 (Voyante, Sorci\u00e8re, Garde\u2026) pour intervenir. Mais attention : si vous prenez la place d\u2019un Loup, vous jouez pour les loups !',
   },
   infect_pere: {
     name: 'Infect P\u00e8re des Loups',

@@ -810,34 +810,9 @@ export async function resolveNightDeaths(
   for (const id of finalIds) {
     const p = session.getPlayer(id);
     if (!p) continue;
-    // Servante D\u00e9vou\u00e9e : intercepte sa propre mort si elle a encore son pouvoir
-    if (
-      p.role === Role.DevotedServant &&
-      !session.devotedServantUsed &&
-      session.lastDeadPlayerRole !== null
-    ) {
-      session.devotedServantUsed = true;
-      const newRole = session.lastDeadPlayerRole;
-      p.role = newRole;
-      await textChannel.send({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle('\uD83E\uDDD5 La Servante D\u00e9vou\u00e9e r\u00e9v\u00e8le son identit\u00e9 !')
-            .setDescription(
-              `**${p.displayName}** \u00e9tait la **Servante D\u00e9vou\u00e9e** !\n\n` +
-                `Elle refuse de mourir et prend le r\u00f4le du dernier joueur \u00e9limin\u00e9 \u2014 **${roleLabelFr(newRole)}** \u2014 et continue la partie avec ce r\u00f4le et ses pouvoirs.`
-            )
-            .setColor(0xf39c12),
-        ],
-      });
-      continue; // Ne pas l\u2019ajouter aux morts
-    }
-    // Mise \u00e0 jour du dernier r\u00f4le mort (avant session.kill)
-    session.lastDeadPlayerRole = p.role;
     session.kill(id);
     actualDeadIds.push(id);
     names.push(p.displayName ?? `<@${id}>`);
-    // Nécromancien : inviter l'esprit du défunt dans l'Antre des Morts
     await addDeadToNecromancerThread(client, session, id);
   }
 
@@ -1167,6 +1142,7 @@ export function fulfillWitchSave(channelId: string, choice: 'yes' | 'no'): boole
 export function fulfillWitchKill(channelId: string, targetOrSkip: string): boolean {
   return fulfillPending(witchKillKey(channelId), targetOrSkip);
 }
+
 
 
 

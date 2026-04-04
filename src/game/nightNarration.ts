@@ -150,7 +150,7 @@ export function buildNightRoadmap(session: GameSession): string {
   }
 
   if (session.devotedServantId() && !session.devotedServantUsed) {
-    lines.push(`_(passif) **Servante D\u00e9vou\u00e9e** \u2014 si \u00e9limin\u00e9e, prend le r\u00f4le du dernier mort_`);
+    lines.push(`_(passif) **Servante D\u00e9vou\u00e9e** \u2014 apr\u00e8s chaque vote du village, peut prendre la place de la victime_`);
   }
 
   const beforeAube = lines.length;

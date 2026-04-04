@@ -145,9 +145,6 @@ export class GameSession {
 
   /** 	rue une fois que la Servante D\u00e9vou\u00e9e a utilis\u00e9 son pouvoir. */
   devotedServantUsed = false;
-  /** R\u00f4le du dernier joueur \u00e9limin\u00e9 (mis \u00e0 jour \u00e0 chaque mort). */
-  lastDeadPlayerRole: Role | null = null;
-
   /** 	rue une fois que l\u2019Infect P\u00e8re des Loups a utilis\u00e9 son pouvoir. */
   infectFatherUsed = false;
   /** L\u2019ID du joueur infect\u00e9 ce soir (si Infect P\u00e8re a agi). */
@@ -539,7 +536,6 @@ export class GameSession {
     this.docteurCharges = 3;
     this.sectarianGroups = new Map();
     this.devotedServantUsed = false;
-    this.lastDeadPlayerRole = null;
     this.infectFatherUsed = false;
     this.infectFatherInfectedId = null;
     this.dogWolfIsWolf = false;
@@ -582,6 +578,7 @@ export class GameSession {
     return roleLabelFr(role);
   }
 }
+
 
 
 

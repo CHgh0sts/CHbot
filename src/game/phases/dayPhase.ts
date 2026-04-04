@@ -37,6 +37,7 @@ import { runNightSequence } from './nightPhase';
 import { runScapegoatDeathChoice } from '../scapegoat';
 import { checkWildChildTransform } from '../wildChild';
 import { addDeadToNecromancerThread } from '../necromancer';
+import { runDevotedServantChoice } from '../devotedServant';
 
 function voteKey(channelId: string, voterId: string): string {
   return `${channelId}:vote:${voterId}`;
@@ -304,7 +305,6 @@ export async function startDayPhase(
 
       // Bouc \u00c9missaire : sacrifice lors d\u2019\u00e9galit\u00e9
       if (scapegoatTriggered) {
-        session.lastDeadPlayerRole = victimPlayer?.role ?? null;
         session.kill(victim);
         await addDeadToNecromancerThread(client, session, victim);
         await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
@@ -331,7 +331,6 @@ export async function startDayPhase(
       }
 
       if (isFirstVillageVote && victimPlayer?.role === Role.Angel) {
-        session.lastDeadPlayerRole = victimPlayer.role;
         session.kill(victim);
         await addDeadToNecromancerThread(client, session, victim);
         await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
@@ -390,6 +389,9 @@ export async function startDayPhase(
         return;
       }
 
+      // Servante D\u00e9vou\u00e9e : peut choisir de prendre la place de la victime
+      await runDevotedServantChoice(client, session, textChannel, victim);
+
       const finalDeaths = await expandDeathsWithHunterAndLovers(
         client,
         session,
@@ -421,34 +423,8 @@ export async function startDayPhase(
 
       const actualDayDeaths: string[] = [];
       for (const id of finalDeaths) {
-        const dp = session.getPlayer(id);
-        if (!dp) { session.kill(id); actualDayDeaths.push(id); continue; }
-        // Servante D\u00e9vou\u00e9e : intercepte sa propre \u00e9limination (vote ou autre)
-        if (
-          dp.role === Role.DevotedServant &&
-          !session.devotedServantUsed &&
-          session.lastDeadPlayerRole !== null
-        ) {
-          session.devotedServantUsed = true;
-          const newRole = session.lastDeadPlayerRole;
-          dp.role = newRole;
-          await textChannel.send({
-            embeds: [
-              new EmbedBuilder()
-                .setTitle('\uD83E\uDDD5 La Servante D\u00e9vou\u00e9e r\u00e9v\u00e8le son identit\u00e9 !')
-                .setDescription(
-                  `**${dp.displayName}** \u00e9tait la **Servante D\u00e9vou\u00e9e** !\n\n` +
-                    `Elle refuse de mourir et prend le r\u00f4le **${roleLabelFr(newRole)}** du dernier \u00e9limin\u00e9, et continue la partie avec ce r\u00f4le et ses pouvoirs.`
-                )
-                .setColor(0xf39c12),
-            ],
-          });
-          continue;
-        }
-        session.lastDeadPlayerRole = dp.role;
         session.kill(id);
         actualDayDeaths.push(id);
-        // N\u00e9cromancien : inviter l\u2019esprit du d\u00e9funt dans l\u2019Antre des Morts
         await addDeadToNecromancerThread(client, session, id);
       }
       if (actualDayDeaths.length > 0) {
