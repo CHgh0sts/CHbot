@@ -91,6 +91,16 @@ export class GameSession {
    */
   ravenTargetId: string | null = null;
 
+  /** `true` après que l'Idiot du village a utilisé son pouvoir (survie au vote). */
+  foolOfVillageUsedPower = false;
+  /** `false` quand l'Idiot du village ne peut plus voter (après usage de son pouvoir). */
+  foolOfVillageCanVote = true;
+
+  /** `true` après que l'Ancien a survécu à une attaque de loups (pouvoir utilisé). */
+  elderSurvivedAttack = false;
+  /** `true` si l'Ancien a été éliminé par le vote du village (malédiction active). */
+  elderCursed = false;
+
   /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
    * Inchangé si le garde n’a pas joué (timeout).
@@ -132,9 +142,13 @@ export class GameSession {
     return this.alivePlayers().map((p) => p.userId);
   }
 
+  isWolfRole(role: Role): boolean {
+    return role === Role.Werewolf || role === Role.BigBadWolf;
+  }
+
   wolfIds(): string[] {
     return this.alivePlayers()
-      .filter((p) => p.role === Role.Werewolf)
+      .filter((p) => this.isWolfRole(p.role))
       .map((p) => p.userId);
   }
 
@@ -208,6 +222,27 @@ export class GameSession {
     return p?.userId;
   }
 
+  foolOfVillageId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.FoolOfVillage && x.alive
+    );
+    return p?.userId;
+  }
+
+  elderId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.Elder && x.alive
+    );
+    return p?.userId;
+  }
+
+  bigBadWolfId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.BigBadWolf && x.alive
+    );
+    return p?.userId;
+  }
+
   getPlayer(userId: string): PlayerState | undefined {
     return this.players.get(userId);
   }
@@ -218,11 +253,17 @@ export class GameSession {
   }
 
   countAliveWolves(): number {
-    return this.alivePlayers().filter((p) => p.role === Role.Werewolf).length;
+    return this.alivePlayers().filter((p) => this.isWolfRole(p.role)).length;
   }
 
   countAliveNonWolves(): number {
-    return this.alivePlayers().filter((p) => p.role !== Role.Werewolf).length;
+    return this.alivePlayers().filter((p) => !this.isWolfRole(p.role)).length;
+  }
+
+  anyWolfEverDied(): boolean {
+    return [...this.players.values()].some(
+      (p) => this.isWolfRole(p.role) && !p.alive
+    );
   }
 
   /**
@@ -309,6 +350,10 @@ export class GameSession {
     this.guardProtectedUserId = null;
     this.dayVoteCount = 0;
     this.loversThreadId = null;
+    this.foolOfVillageUsedPower = false;
+    this.foolOfVillageCanVote = true;
+    this.elderSurvivedAttack = false;
+    this.elderCursed = false;
   }
 
   async hydrateDisplayNames(client: Client): Promise<void> {

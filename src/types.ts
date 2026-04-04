@@ -11,6 +11,9 @@ export enum Role {
   LittleGirl = 'LITTLE_GIRL',
   Raven = 'RAVEN',
   RedRidingHood = 'RED_RIDING_HOOD',
+  FoolOfVillage = 'FOOL_OF_VILLAGE',
+  Elder = 'ELDER',
+  BigBadWolf = 'BIG_BAD_WOLF',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';
@@ -23,7 +26,8 @@ export type NightSubPhase =
   | 'guard'
   | 'wolves'
   | 'witch'
-  | 'raven';
+  | 'raven'
+  | 'bigbadwolf';
 
 export interface PlayerState {
   userId: string;

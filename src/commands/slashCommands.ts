@@ -114,7 +114,42 @@ export const slashCommands = [
       {
         name: 'chaperon_rouge',
         description:
-          'Chaperon Rouge : oui = protégée des loups tant que le Chasseur est en vie (pouvoir passif)',
+          'Chaperon Rouge : oui = prot\u00e9g\u00e9e des loups tant que le Chasseur est en vie (pouvoir passif)',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'idiot_du_village',
+        description:
+          'Idiot du village : oui = survit au 1er vote du village (perd son droit de vote ensuite)',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'ancien',
+        description:
+          'Ancien : oui = survit \u00e0 la 1re attaque des loups ; si tu\u00e9 par le village, tous les sp\u00e9ciaux villageois perdent leurs pouvoirs',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'grand_mechant_loup',
+        description:
+          'Grand M\u00e9chant Loup : oui = loup qui peut tuer un joueur suppl\u00e9mentaire chaque nuit tant qu\u2019aucun loup n\u2019est mort',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'tiebreaker_random',
+        description:
+          '\u00c9galit\u00e9 au vote : oui = tirage au sort parmi les ex-aequo (non = personne ne meurt)',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'premiere_nuit_sans_meurtre',
+        description:
+          '1re nuit sans meurtre : oui = les loups se r\u00e9unissent mais n\u2019\u00e9liminent personne la nuit 1',
         type: 5,
         required: false,
       },

@@ -25,6 +25,7 @@ export async function runRavenPhase(
 ): Promise<void> {
   const ravenId = session.ravenId();
   if (!ravenId) return;
+  if (session.elderCursed) return;
 
   session.nightSubPhase = 'raven';
 

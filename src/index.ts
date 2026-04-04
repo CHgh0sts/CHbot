@@ -41,6 +41,7 @@ import {
 import { fulfillVote } from './game/phases/dayPhase';
 import { fulfillCupidPick } from './game/cupid';
 import { fulfillRaven } from './game/raven';
+import { fulfillBigBadWolf } from './game/bigbadwolf';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -178,6 +179,11 @@ client.on(Events.MessageCreate, async (message) => {
         includeLittleGirl: null,
         includeRaven: null,
         includeRedRidingHood: null,
+        includeFoolOfVillage: null,
+        includeElder: null,
+        includeBigBadWolf: null,
+        tiebreakerRandom: null,
+        skipFirstNightKill: null,
         revealDeadRoles: null,
         darkNightMode: null,
         gossipSeerMode: null,
@@ -366,6 +372,11 @@ async function handleSlash(
       includeLittleGirl: interaction.options.getBoolean('petite_fille'),
       includeRaven: interaction.options.getBoolean('corbeau'),
       includeRedRidingHood: interaction.options.getBoolean('chaperon_rouge'),
+      includeFoolOfVillage: interaction.options.getBoolean('idiot_du_village'),
+      includeElder: interaction.options.getBoolean('ancien'),
+      includeBigBadWolf: interaction.options.getBoolean('grand_mechant_loup'),
+      tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
+      skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
       darkNightMode: interaction.options.getBoolean('nuit_sombre'),
       gossipSeerMode: interaction.options.getBoolean('voyante_bavarde'),
@@ -534,6 +545,12 @@ async function handleSelect(
     if (interaction.user.id !== ravenId) return;
     fulfillRaven(channelId, target);
   }
+
+  if (kind === 'bigbadwolf') {
+    const bbwId = session.bigBadWolfId();
+    if (interaction.user.id !== bbwId) return;
+    fulfillBigBadWolf(channelId, target);
+  }
 }
 
 async function handleButton(
@@ -674,6 +691,13 @@ async function handleButton(
     const ravenId = session.ravenId();
     if (interaction.user.id !== ravenId) return;
     fulfillRaven(channelId, 'skip');
+    return;
+  }
+
+  if (parts[2] === 'bigbadwolf' && parts[3] === 'skip') {
+    const bbwId = session.bigBadWolfId();
+    if (interaction.user.id !== bbwId) return;
+    fulfillBigBadWolf(channelId, 'skip');
   }
 }
 

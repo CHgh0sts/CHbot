@@ -549,6 +549,11 @@ export async function runLgConfig(
     options.includeLittleGirl !== null ||
     options.includeRaven !== null ||
     options.includeRedRidingHood !== null ||
+    options.includeFoolOfVillage !== null ||
+    options.includeElder !== null ||
+    options.includeBigBadWolf !== null ||
+    options.tiebreakerRandom !== null ||
+    options.skipFirstNightKill !== null ||
     options.revealDeadRoles !== null ||
     options.darkNightMode !== null ||
     options.gossipSeerMode !== null ||
@@ -610,6 +615,11 @@ export async function runLgConfig(
   }
   if (options.includeRaven !== null) c.includeRaven = options.includeRaven;
   if (options.includeRedRidingHood !== null) c.includeRedRidingHood = options.includeRedRidingHood;
+  if (options.includeFoolOfVillage !== null) c.includeFoolOfVillage = options.includeFoolOfVillage;
+  if (options.includeElder !== null) c.includeElder = options.includeElder;
+  if (options.includeBigBadWolf !== null) c.includeBigBadWolf = options.includeBigBadWolf;
+  if (options.tiebreakerRandom !== null) c.tiebreakerRandom = options.tiebreakerRandom;
+  if (options.skipFirstNightKill !== null) c.skipFirstNightKill = options.skipFirstNightKill;
   if (options.revealDeadRoles !== null) c.revealDeadRoles = options.revealDeadRoles;
   if (options.darkNightMode !== null) c.darkNightMode = options.darkNightMode;
   if (options.gossipSeerMode !== null) c.gossipSeerMode = options.gossipSeerMode;
@@ -631,7 +641,10 @@ export async function runLgConfig(
     options.includeAngel !== null ||
     options.includeLittleGirl !== null ||
     options.includeRaven !== null ||
-    options.includeRedRidingHood !== null;
+    options.includeRedRidingHood !== null ||
+    options.includeFoolOfVillage !== null ||
+    options.includeElder !== null ||
+    options.includeBigBadWolf !== null;
 
   if (options.villageoisAuto === true) {
     c.villagerCount = null;

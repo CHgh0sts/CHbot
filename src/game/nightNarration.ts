@@ -48,12 +48,18 @@ export function buildNightRoadmap(session: GameSession): string {
 
   if (session.wolfIds().length > 0) {
     const pf =
-      session.littleGirlId() != null
-        ? ' · **Petite fille** : espionnage (optionnel, risque) _· fil privé_'
+      !session.elderCursed && session.littleGirlId() != null
+        ? ' \u00b7 **Petite fille** : espionnage (optionnel, risque) _\u00b7 fil priv\u00e9_'
         : '';
     lines.push(
-      `${i++}. **Loups-Garou** — la **meute** vote sa victime _· fil **Meute** + \`/lg-vote\`_` +
+      `${i++}. **Loups-Garou** \u2014 la **meute** vote sa victime _\u00b7 fil **Meute** + \`/lg-vote\`_` +
         pf
+    );
+  }
+
+  if (session.bigBadWolfId() && !session.anyWolfEverDied()) {
+    lines.push(
+      `${i++}. **Grand M\u00e9chant Loup** \u2014 d\u00e9vore un joueur suppl\u00e9mentaire (tant qu\u2019aucun loup n\u2019est mort) _\u00b7 fil priv\u00e9_`
     );
   }
 
@@ -63,9 +69,15 @@ export function buildNightRoadmap(session: GameSession): string {
     );
   }
 
-  if (session.redRidingHoodId() && session.hunterId()) {
+  if (!session.elderCursed && session.redRidingHoodId() && session.hunterId()) {
     lines.push(
-      `_(passif) **Chaperon Rouge** — protégée des loups tant que le **Chasseur** est en vie_`
+      `_(passif) **Chaperon Rouge** \u2014 prot\u00e9g\u00e9e des loups tant que le **Chasseur** est en vie_`
+    );
+  }
+
+  if (session.elderId() && !session.elderSurvivedAttack) {
+    lines.push(
+      `_(passif) **Ancien** \u2014 survivra \u00e0 la 1re attaque des loups_`
     );
   }
 

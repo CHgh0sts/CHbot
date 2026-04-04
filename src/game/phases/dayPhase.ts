@@ -39,7 +39,7 @@ function voteKey(channelId: string, voterId: string): string {
   return `${channelId}:vote:${voterId}`;
 }
 
-/** Totaux par cible uniquement — ne révèle pas qui a voté pour qui. */
+/** Totaux par cible uniquement \u2014 ne r\u00e9v\u00e8le pas qui a vot\u00e9 pour qui. */
 function formatDayVoteTallyLines(
   session: GameSession,
   aliveAtVote: string[],
@@ -62,16 +62,16 @@ function formatDayVoteTallyLines(
 
   const lines = rows.map((r) => {
     const label = r.n === 1 ? '1 vote' : `${r.n} votes`;
-    return `• **${r.name}** (<@${r.id}>) — **${label}**`;
+    return `\u2022 **${r.name}** (<@${r.id}>) \u2014 **${label}**`;
   });
 
   return (
-    '_Les bulletins restent **secrets** : on affiche seulement combien de voix chaque joueur a **reçues**._\n\n' +
+    '_Les bulletins restent **secrets** : on affiche seulement combien de voix chaque joueur a **re\u00e7ues**._\n\n' +
     lines.join('\n')
   );
 }
 
-/** Après le **premier** vote du village : l’Ange vivant redevient villageois. */
+/** Apr\u00e8s le **premier** vote du village : l\u2019Ange vivant redevient villageois. */
 async function demoteAngelToVillagerIfAlive(
   client: Client,
   session: GameSession
@@ -82,9 +82,9 @@ async function demoteAngelToVillagerIfAlive(
   if (!angel) return false;
   angel.role = Role.Villager;
   const embed = new EmbedBuilder()
-    .setTitle('Ton nouveau rôle')
+    .setTitle('Ton nouveau r\u00f4le')
     .setDescription(
-      `Tu n’es plus l’**Ange** : tu es maintenant **${roleLabelFr(Role.Villager)}**.\n\n${rolePowerBlurb(Role.Villager)}`
+      `Tu n\u2019es plus l\u2019**Ange** : tu es maintenant **${roleLabelFr(Role.Villager)}**.\n\n${rolePowerBlurb(Role.Villager)}`
     )
     .setColor(0x3498db);
   await deliverRoleToPlayer(
@@ -117,34 +117,57 @@ export async function startDayPhase(
     }
 
     const angelNote = session.angelId()
-      ? `\n\n_L’**Ange** est en jeu : au **tout premier vote du village**, si **l’Ange** est éliminé·e, **il/elle gagne seul·e** et la partie s’arrête. **Sinon**, l’Ange **devient villageois·e**._`
+      ? `\n\n_L\u2019**Ange** est en jeu : au **tout premier vote du village**, si **l\u2019Ange** est \u00e9limin\u00e9\u00b7e, **il/elle gagne seul\u00b7e** et la partie s\u2019arr\u00eate. **Sinon**, l\u2019Ange **devient villageois\u00b7e**._`
+      : '';
+
+    const foolNote = session.foolOfVillageId()
+      ? `\n\n_L\u2019**Idiot du village** est en jeu : si le village vote pour l\u2019\u00e9liminer, il ne meurt pas (une seule fois) mais perd son droit de vote._`
+      : '';
+
+    const elderNote = session.elderId()
+      ? `\n\n_L\u2019**Ancien** est en jeu : s\u2019il est \u00e9limin\u00e9 par le village, tous les r\u00f4les sp\u00e9ciaux villageois perdent leurs pouvoirs._`
       : '';
 
     await sendNightBeat(
       textChannel,
-      'Le jour — débat & vote',
-      `Le village est **éveillé**. Discutez ici ou en vocal, puis chaque **vivant** recevra **en même temps** un **menu de vote** dans **son fil privé**.\n\n` +
-        `⏱️ **${Math.floor(DAY_VOTE_MS / 1000)} s** maximum après l’envoi des menus.\n\n` +
-        `_Si ce salon reste calme quelques secondes, c’est que le bot **prépare** les votes — **pas un bug**._` +
-        angelNote,
+      'Le jour \u2014 d\u00e9bat & vote',
+      `Le village est **\u00e9veill\u00e9**. Discutez ici ou en vocal, puis chaque **vivant** recevra **en m\u00eame temps** un **menu de vote** dans **son fil priv\u00e9**.\n\n` +
+        `\u23f1\ufe0f **${Math.floor(DAY_VOTE_MS / 1000)} s** maximum apr\u00e8s l\u2019envoi des menus.\n\n` +
+        `_Si ce salon reste calme quelques secondes, c\u2019est que le bot **pr\u00e9pare** les votes \u2014 **pas un bug**._` +
+        angelNote + foolNote + elderNote,
       0x3498db
     );
 
+    const foolId = session.foolOfVillageId();
+    const voters = alive.filter((id) => {
+      if (id === foolId && !session.foolOfVillageCanVote) return false;
+      return true;
+    });
+
+    if (!session.foolOfVillageCanVote && foolId) {
+      const foolPlayer = session.getPlayer(foolId);
+      if (foolPlayer) {
+        await textChannel.send({
+          content: `**${foolPlayer.displayName}** (<@${foolId}>) \u2014 _Idiot du village_ : ne peut pas voter ce tour.`,
+        });
+      }
+    }
+
     const sendResults = await Promise.all(
-      alive.map(async (voterId) => {
+      voters.map(async (voterId) => {
         const targets = alive.filter((id) => id !== voterId);
         if (targets.length === 0) return { voterId, ok: false as const };
 
         const embed = new EmbedBuilder()
           .setTitle('Vote')
           .setDescription(
-            'Vote pour **éliminer** un joueur (tu ne peux pas te viser toi-même).'
+            'Vote pour **\u00e9liminer** un joueur (tu ne peux pas te viser toi-m\u00eame).'
           )
           .setColor(0x3498db);
 
         const menu = buildAlivePlayerSelect(
           `lg:${session.textChannelId}:vote`,
-          'Éliminer…',
+          '\u00c9liminer\u2026',
           targets,
           session.labelMap(),
           new Set([voterId])
@@ -158,7 +181,7 @@ export async function startDayPhase(
           [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu)],
           {
             pingContent:
-              `<@${voterId}> **🔔 Vote du village — à toi !**\n` +
+              `<@${voterId}> **\ud83d\udd14 Vote du village \u2014 \u00e0 toi !**\n` +
               `Choisis une cible ci-dessous (menu). Temps : **${Math.floor(DAY_VOTE_MS / 1000)} s**.`,
           }
         );
@@ -166,7 +189,7 @@ export async function startDayPhase(
         if (!ok) {
           await textChannel.send({
             content:
-              'Impossible d’envoyer un menu de vote dans un fil privé — ce vote est ignoré.',
+              'Impossible d\u2019envoyer un menu de vote dans un fil priv\u00e9 \u2014 ce vote est ignor\u00e9.',
           });
         }
         return { voterId, ok };
@@ -201,14 +224,24 @@ export async function startDayPhase(
     session.ravenTargetId = null;
 
     const maxScore = tally.size ? Math.max(...tally.values()) : 0;
-    const winners = [...tally.entries()]
+    const tied = [...tally.entries()]
       .filter(([, s]) => s === maxScore)
       .map(([t]) => t);
+
+    let singleWinner: string | null = null;
+    if (tied.length === 1 && maxScore > 0) {
+      singleWinner = tied[0]!;
+    } else if (tied.length > 1 && maxScore > 0 && session.compositionConfig.tiebreakerRandom) {
+      singleWinner = tied[Math.floor(Math.random() * tied.length)]!;
+      await textChannel.send({
+        content: `**\u00c9galit\u00e9 au vote** \u2014 tirage au sort : <@${singleWinner}> est d\u00e9sign\u00e9\u00b7e.`,
+      });
+    }
 
     await textChannel.send({
       embeds: [
         publicEmbed(
-          'Vote du village — décompte',
+          'Vote du village \u2014 d\u00e9compte',
           formatDayVoteTallyLines(session, alive, tally)
         ).setColor(0x3498db),
       ],
@@ -216,12 +249,12 @@ export async function startDayPhase(
 
     const isFirstVillageVote = session.dayVoteCount === 0;
 
-    if (winners.length !== 1 || maxScore === 0) {
+    if (!singleWinner) {
       await textChannel.send({
         content:
-          winners.length > 1
-            ? '**Égalité au vote** — personne n’est éliminé aujourd’hui.'
-            : '**Aucun vote valide** — pas d’élimination.',
+          tied.length > 1 && maxScore > 0
+            ? '**\u00c9galit\u00e9 au vote** \u2014 personne n\u2019est \u00e9limin\u00e9 aujourd\u2019hui.'
+            : '**Aucun vote valide** \u2014 pas d\u2019\u00e9limination.',
       });
       if (isFirstVillageVote) {
         const demoted = await demoteAngelToVillagerIfAlive(client, session);
@@ -230,7 +263,7 @@ export async function startDayPhase(
             embeds: [
               publicEmbed(
                 'Ange',
-                '**Premier vote** sans élimination unique : l’**Ange** redevient **villageois** (voir fil privé).'
+                '**Premier vote** sans \u00e9limination unique : l\u2019**Ange** redevient **villageois** (voir fil priv\u00e9).'
               ).setColor(0xe8daef),
             ],
           });
@@ -238,28 +271,64 @@ export async function startDayPhase(
       }
       session.dayVoteCount++;
     } else {
-      const victim = winners[0]!;
+      const victim = singleWinner;
       const victimPlayer = session.getPlayer(victim);
 
-      if (
-        isFirstVillageVote &&
-        victimPlayer?.role === Role.Angel
-      ) {
+      if (isFirstVillageVote && victimPlayer?.role === Role.Angel) {
         session.kill(victim);
-        await demotePlayersToStageAudience(textChannel.guild, session, [
-          victim,
-        ]);
+        await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
         await textChannel.send({
           embeds: [
             publicEmbed(
-              'L’Ange triomphe',
-              `**${victimPlayer.displayName}** (<@${victim}>) était l’**Ange** : éliminé·e au **premier vote du village**, **il/elle remporte la partie seul·e** — fin de partie.`
+              'L\u2019Ange triomphe',
+              `**${victimPlayer.displayName}** (<@${victim}>) \u00e9tait l\u2019**Ange** : \u00e9limin\u00e9\u00b7e au **premier vote du village**, **il/elle remporte la partie seul\u00b7e** \u2014 fin de partie.`
             ).setColor(0xf1c40f),
           ],
         });
         session.dayVoteCount++;
         session.phase = 'ended';
         await presentGameOverPanel(client, session, textChannel, 'angel');
+        return;
+      }
+
+      // Idiot du village : survive au premier vote, perd son droit de vote
+      if (
+        victimPlayer?.role === Role.FoolOfVillage &&
+        !session.foolOfVillageUsedPower
+      ) {
+        session.foolOfVillageUsedPower = true;
+        session.foolOfVillageCanVote = false;
+        await textChannel.send({
+          embeds: [
+            publicEmbed(
+              'L\u2019Idiot du village',
+              `**${victimPlayer.displayName}** (<@${victim}>) est l\u2019**Idiot du village** !\n\n` +
+                'Le village pensait l\u2019\u00e9liminer, mais il/elle ne meurt pas \u2014 c\u2019est l\u2019Idiot !\n\n' +
+                '_En revanche, il/elle **perd son droit de vote** pour le reste de la partie. Il/elle peut toujours \u00eatre \u00e9limin\u00e9\u00b7e par les loups ou d\u2019autres effets._'
+            ).setColor(0xf39c12),
+          ],
+        });
+        if (isFirstVillageVote) {
+          const demoted = await demoteAngelToVillagerIfAlive(client, session);
+          if (demoted) {
+            await textChannel.send({
+              embeds: [
+                publicEmbed(
+                  'Ange',
+                  '**Premier vote** r\u00e9solu : l\u2019**Ange** n\u2019a pas \u00e9t\u00e9 \u00e9limin\u00e9\u00b7e \u2014 **il/elle devient villageois\u00b7e** (voir fil priv\u00e9).'
+                ).setColor(0xe8daef),
+              ],
+            });
+          }
+        }
+        session.dayVoteCount++;
+        const winCheck = session.checkVictory();
+        if (winCheck) {
+          session.phase = 'ended';
+          await presentGameOverPanel(client, session, textChannel, winCheck);
+          return;
+        }
+        await runNightSequence(client, session, textChannel);
         return;
       }
 
@@ -270,13 +339,27 @@ export async function startDayPhase(
         [victim]
       );
 
+      // Ancien : malédiction si éliminé par le vote du village
+      if (victimPlayer?.role === Role.Elder && finalDeaths.includes(victim)) {
+        session.elderCursed = true;
+        await textChannel.send({
+          embeds: [
+            publicEmbed(
+              'La Mal\u00e9diction de l\u2019Ancien',
+              `**${victimPlayer.displayName}** \u00e9tait l\u2019**Ancien** \u2014 \u00e9limin\u00e9\u00b7e par le village !\n\n` +
+                '\u26a0\ufe0f **Mal\u00e9diction** : tous les **r\u00f4les sp\u00e9ciaux du camp Village** perdent leurs pouvoirs pour le reste de la partie (Voyante, Sorci\u00e8re, Garde, Corbeau\u2026)'
+            ).setColor(0x8e44ad),
+          ],
+        });
+      }
+
       const reveal = shouldRevealDeadRoles(session.compositionConfig);
       const desc =
         finalDeaths.length === 0
-          ? 'Personne n’est éliminé.'
+          ? 'Personne n\u2019est \u00e9limin\u00e9.'
           : reveal
-            ? `Éliminés :\n${formatDeathAnnounces(session, finalDeaths, true)}`
-            : `Éliminés : ${finalDeaths.map((id) => `<@${id}>`).join(', ')}`;
+            ? `\u00c9limin\u00e9s :\n${formatDeathAnnounces(session, finalDeaths, true)}`
+            : `\u00c9limin\u00e9s : ${finalDeaths.map((id) => `<@${id}>`).join(', ')}`;
 
       for (const id of finalDeaths) session.kill(id);
       if (finalDeaths.length > 0) {
@@ -287,7 +370,7 @@ export async function startDayPhase(
         );
       }
 
-      let voteEmbed = publicEmbed('Résultat du vote', desc).setColor(0xe67e22);
+      let voteEmbed = publicEmbed('R\u00e9sultat du vote', desc).setColor(0xe67e22);
       let files: AttachmentBuilder[] = [];
       if (reveal && finalDeaths.length > 0) {
         const r = session.getPlayer(finalDeaths[0]!)?.role;
@@ -310,7 +393,7 @@ export async function startDayPhase(
             embeds: [
               publicEmbed(
                 'Ange',
-                '**Premier vote** résolu : l’**Ange** n’a pas été éliminé·e — **il/elle devient villageois·e** (voir fil privé).'
+                '**Premier vote** r\u00e9solu : l\u2019**Ange** n\u2019a pas \u00e9t\u00e9 \u00e9limin\u00e9\u00b7e \u2014 **il/elle devient villageois\u00b7e** (voir fil priv\u00e9).'
               ).setColor(0xe8daef),
             ],
           });
@@ -330,7 +413,7 @@ export async function startDayPhase(
   } catch (e) {
     console.error(e);
     await textChannel.send({
-      content: 'Erreur pendant le jour — vérifie les logs du bot.',
+      content: 'Erreur pendant le jour \u2014 v\u00e9rifie les logs du bot.',
     });
   }
 }

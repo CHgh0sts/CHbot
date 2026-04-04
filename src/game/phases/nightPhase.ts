@@ -41,6 +41,7 @@ import {
 } from '../../services/SecretThreadService';
 import { runCupidPhase } from '../cupid';
 import { runRavenPhase } from '../raven';
+import { runBigBadWolfPhase } from '../bigbadwolf';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import {
   sendDawnApproaching,
@@ -172,6 +173,10 @@ export async function runGuardPhase(
 ): Promise<void> {
   const guardId = session.guardId();
   if (!guardId) return;
+  if (session.elderCursed) {
+    await textChannel.send({ content: '**Garde** : malédiction de l\'Ancien — pouvoir désactivé.' });
+    return;
+  }
 
   session.nightSubPhase = 'guard';
 
@@ -270,6 +275,10 @@ export async function runSeerPhase(
 ): Promise<void> {
   const seerId = session.seerId();
   if (!seerId) return;
+  if (session.elderCursed) {
+    await textChannel.send({ content: '**Voyante** : malédiction de l\'Ancien — pouvoir désactivé.' });
+    return;
+  }
 
   session.nightSubPhase = 'seer';
   const targets = session.aliveIds().filter((id) => id !== seerId);
@@ -479,7 +488,7 @@ export async function runWolfPhase(
 
   const spyK = littleGirlSpyKey(session.textChannelId);
   let lgSpyPromise: Promise<string | null> = Promise.resolve(null);
-  const lgUid = session.littleGirlId();
+  const lgUid = session.elderCursed ? undefined : session.littleGirlId();
   if (lgUid && session.getPlayer(lgUid)?.alive) {
     lgSpyPromise = createWaiter(spyK, NIGHT_ACTION_MS);
     const spyEmbed = new EmbedBuilder()
@@ -558,7 +567,7 @@ export async function runWolfPhase(
     if (wolfTarget === session.guardProtectedUserId) {
       wolfTarget = null;
     }
-    const rrhId = session.redRidingHoodId();
+    const rrhId = session.elderCursed ? undefined : session.redRidingHoodId();
     if (wolfTarget !== null && wolfTarget === rrhId && session.hunterId()) {
       await textChannel.send({
         embeds: [
@@ -570,6 +579,27 @@ export async function runWolfPhase(
       });
       wolfTarget = null;
     }
+
+    if (wolfTarget !== null) {
+      const elderP = session.getPlayer(wolfTarget);
+      if (elderP?.role === Role.Elder && !session.elderSurvivedAttack) {
+        session.elderSurvivedAttack = true;
+        wolfTarget = null;
+        await textChannel.send({
+          embeds: [
+            publicEmbed(
+              'Une r\u00e9sistance myst\u00e9rieuse\u2026',
+              'Les loups ont attaqu\u00e9 cette nuit, mais leur proie a **r\u00e9sist\u00e9** \u00e0 l\u2019assaut d\u2019une mani\u00e8re inexplicable. **Personne** ne meurt de cette attaque.'
+            ).setColor(0x8e44ad),
+          ],
+        });
+      }
+    }
+
+    if (session.compositionConfig.skipFirstNightKill && session.nightNumber === 1) {
+      wolfTarget = null;
+    }
+
     session.wolfTargetId = wolfTarget;
   }
 
@@ -619,6 +649,10 @@ export async function runWitchPhase(
 ): Promise<void> {
   const witchId = session.witchId();
   if (!witchId) return;
+  if (session.elderCursed) {
+    await textChannel.send({ content: '**Sorci\u00e8re** : mal\u00e9diction de l\u2019Ancien \u2014 potions d\u00e9sactiv\u00e9es.' });
+    return;
+  }
 
   session.nightSubPhase = 'witch';
 
@@ -871,6 +905,15 @@ export async function runNightSequence(
       );
     }
     await runWitchPhase(client, session, textChannel);
+
+    if (session.bigBadWolfId()) {
+      await sendNightBeat(
+        textChannel,
+        'Grand M\u00e9chant Loup\u2026',
+        'Le **Grand M\u00e9chant Loup** peut d\u00e9vorer un joueur suppl\u00e9mentaire. _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runBigBadWolfPhase(client, session, textChannel);
 
     await sendDawnApproaching(textChannel, session);
     await resolveNightDeaths(client, session, textChannel);

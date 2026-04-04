@@ -40,7 +40,7 @@ export async function expandDeathsWithHunterAndLovers(
       );
     }
 
-    if (p?.role === Role.Hunter && p.alive && !item.griefTrigger) {
+    if (p?.role === Role.Hunter && p.alive && !item.griefTrigger && !session.elderCursed) {
       await announceHunterDeathPublic(session, textChannel, uid);
       const shot = await runHunterShoot(client, session, uid, textChannel);
       if (shot) {

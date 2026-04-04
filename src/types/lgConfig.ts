@@ -12,6 +12,11 @@ export interface LgConfigOptions {
   includeLittleGirl: boolean | null;
   includeRaven: boolean | null;
   includeRedRidingHood: boolean | null;
+  includeFoolOfVillage: boolean | null;
+  includeElder: boolean | null;
+  includeBigBadWolf: boolean | null;
+  tiebreakerRandom: boolean | null;
+  skipFirstNightKill: boolean | null;
   revealDeadRoles: boolean | null;
   darkNightMode: boolean | null;
   gossipSeerMode: boolean | null;
