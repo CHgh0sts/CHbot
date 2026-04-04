@@ -50,7 +50,7 @@ import { runPyromaniacPhase } from '../pyromaniac';
 import { initBearTamerNeighbors, checkBearTamerGrowl } from '../bearTamer';
 import { createSistersThread, createBrothersThread } from '../siblings';
 import { runDocteurPhase } from '../docteur';
-import { runNecromancerPhase } from '../necromancer';
+import { initNecromancerThread, addDeadToNecromancerThread } from '../necromancer';
 import { initSectarianGroups, runSectarianPhase } from '../sectarian';
 import { runInfectFatherPhase } from '../infectFather';
 import { runDogWolfPhase } from '../dogWolf';
@@ -837,6 +837,8 @@ export async function resolveNightDeaths(
     session.kill(id);
     actualDeadIds.push(id);
     names.push(p.displayName ?? `<@${id}>`);
+    // Nécromancien : inviter l'esprit du défunt dans l'Antre des Morts
+    await addDeadToNecromancerThread(client, session, id);
   }
 
   if (actualDeadIds.length > 0) {
@@ -931,6 +933,11 @@ export async function runNightSequence(
     // Nuit 1 : initialisation de l'Montreur d'Ours
     if (session.nightNumber === 1 && session.bearTamerId()) {
       await initBearTamerNeighbors(client, session);
+    }
+
+    // Nuit 1 : initialisation du N\u00e9cromancien (fil Antre des Morts)
+    if (session.nightNumber === 1 && session.necromancerId()) {
+      await initNecromancerThread(client, session);
     }
 
     // Nuit 1 : initialisation du Sectaire Abominable (groupes A/B)
@@ -1089,17 +1096,7 @@ export async function runNightSequence(
       );
     }
     await runPyromaniacPhase(client, session, textChannel);
-    if (session.necromancerId()) {
-      const deadCount = [...session.players.values()].filter(p => !p.alive).length;
-      if (deadCount > 0) {
-        await sendNightBeat(
-          textChannel,
-          'Le N\u00e9cromancien consulte\u2026',
-          'Le **N\u00e9cromancien** inspecte un mort pour conna\u00eetre son r\u00f4le exact. _\u00b7 fil priv\u00e9._'
-        );
-      }
-    }
-    await runNecromancerPhase(client, session, textChannel);
+
 
     if (session.sectarianId()) {
       await sendNightBeat(
@@ -1170,6 +1167,7 @@ export function fulfillWitchSave(channelId: string, choice: 'yes' | 'no'): boole
 export function fulfillWitchKill(channelId: string, targetOrSkip: string): boolean {
   return fulfillPending(witchKillKey(channelId), targetOrSkip);
 }
+
 
 
 

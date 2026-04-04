@@ -38,6 +38,7 @@ export async function deleteAllGameThreads(
   if (session.loversThreadId) ids.push(session.loversThreadId);
   if (session.sistersThreadId) ids.push(session.sistersThreadId);
   if (session.brothersThreadId) ids.push(session.brothersThreadId);
+  if (session.necromancerThreadId) ids.push(session.necromancerThreadId);
   for (const id of ids) {
     const ch = await client.channels.fetch(id).catch(() => null);
     if (ch?.isThread()) {
@@ -49,6 +50,7 @@ export async function deleteAllGameThreads(
   session.loversThreadId = null;
   session.sistersThreadId = null;
   session.brothersThreadId = null;
+  session.necromancerThreadId = null;
 }
 
 function canUsePostGameButtons(

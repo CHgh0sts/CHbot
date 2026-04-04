@@ -36,6 +36,7 @@ import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import { runNightSequence } from './nightPhase';
 import { runScapegoatDeathChoice } from '../scapegoat';
 import { checkWildChildTransform } from '../wildChild';
+import { addDeadToNecromancerThread } from '../necromancer';
 
 function voteKey(channelId: string, voterId: string): string {
   return `${channelId}:vote:${voterId}`;
@@ -303,7 +304,9 @@ export async function startDayPhase(
 
       // Bouc \u00c9missaire : sacrifice lors d\u2019\u00e9galit\u00e9
       if (scapegoatTriggered) {
+        session.lastDeadPlayerRole = victimPlayer?.role ?? null;
         session.kill(victim);
+        await addDeadToNecromancerThread(client, session, victim);
         await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
         const sgName = victimPlayer?.displayName ?? 'Bouc';
         await textChannel.send({
@@ -328,7 +331,9 @@ export async function startDayPhase(
       }
 
       if (isFirstVillageVote && victimPlayer?.role === Role.Angel) {
+        session.lastDeadPlayerRole = victimPlayer.role;
         session.kill(victim);
+        await addDeadToNecromancerThread(client, session, victim);
         await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
         await textChannel.send({
           embeds: [
@@ -443,6 +448,8 @@ export async function startDayPhase(
         session.lastDeadPlayerRole = dp.role;
         session.kill(id);
         actualDayDeaths.push(id);
+        // N\u00e9cromancien : inviter l\u2019esprit du d\u00e9funt dans l\u2019Antre des Morts
+        await addDeadToNecromancerThread(client, session, id);
       }
       if (actualDayDeaths.length > 0) {
         await demotePlayersToStageAudience(

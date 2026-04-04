@@ -315,10 +315,10 @@ const ROLE_INFO: Record<string, RoleInfo> = {
     emoji: '\u{1F480}',
     camp: 'Village',
     campColor: 0x6c3483,
-    power: 'Chaque nuit, choisit un **joueur mort** et apprend son **r\u00f4le exact** dans son fil priv\u00e9. Pouvoir purement informatif \u2014 il ne peut pas ramener les morts \u00e0 la vie.',
-    timing: 'Chaque nuit (si au moins un mort), en fil priv\u00e9.',
+    power: 'Le N\u00e9cromancien poss\u00e8de un **fil priv\u00e9 permanent** appel\u00e9 l\u2019**Antre des Morts**. D\u00e8s qu\u2019un joueur meurt (nuit ou vote), son esprit est invit\u00e9 dans ce fil et son r\u00f4le est r\u00e9v\u00e9l\u00e9. Les morts peuvent \u00e9crire et \u00e9changer avec le N\u00e9cromancien \u2014 quelle que soit leur appartenance (village, loups, solo). Ils ne peuvent pas voter ni utiliser de pouvoirs.',
+    timing: 'Passif \u2014 le fil se remplit tout au long de la partie. Cr\u00e9ation du fil \u00e0 la nuit 1.',
     victory: 'Gagne avec le **camp Village**.',
-    tip: 'Tr\u00e8s utile pour reconstruire l\u2019historique de la partie. Les infos sur les morts permettent de d\u00e9duire l\u2019identit\u00e9 des Loups encore en vie.',
+    tip: 'Vous avez acc\u00e8s aux morts de tous les camps. Les loups morts peuvent vous trahir ou vous aider. Profitez de leurs informations pour orienter le village \u2014 sans trop vous d\u00e9voiler.',
   },
   sectaire: {
     name: 'Sectaire Abominable',

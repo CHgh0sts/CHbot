@@ -134,6 +134,9 @@ export class GameSession {
   /** Fil priv\u00e9 partag\u00e9 par les Trois Fr\u00e8res. */
   brothersThreadId: string | null = null;
 
+  /** Fil priv\u00e9 du N\u00e9cromancien (antre des morts — partag\u00e9 avec tous les morts). */
+  necromancerThreadId: string | null = null;
+
   /** Charges restantes du Docteur (3 au d\u00e9part). */
   docteurCharges = 3;
 
@@ -532,6 +535,7 @@ export class GameSession {
     this.bearTamerNeighborIds = [];
     this.sistersThreadId = null;
     this.brothersThreadId = null;
+    this.necromancerThreadId = null;
     this.docteurCharges = 3;
     this.sectarianGroups = new Map();
     this.devotedServantUsed = false;

@@ -50,7 +50,6 @@ import { fulfillScapegoat } from './game/scapegoat';
 import { fulfillFox } from './game/fox';
 import { fulfillPyromaniac, fulfillPyromaniacIgnite } from './game/pyromaniac';
 import { fulfillDocteur } from './game/docteur';
-import { fulfillNecromancer } from './game/necromancer';
 import { fulfillSectarian } from './game/sectarian';
 import { fulfillInfectFather } from './game/infectFather';
 import { fulfillDogWolf } from './game/dogWolf';
@@ -642,11 +641,6 @@ async function handleSelect(
   if (kind === 'docteur') {
     if (interaction.user.id !== session.docteurId()) return;
     fulfillDocteur(channelId, target);
-  }
-
-  if (kind === 'necromancer') {
-    if (interaction.user.id !== session.necromancerId()) return;
-    fulfillNecromancer(channelId, target);
   }
 
   if (kind === 'sectarian') {

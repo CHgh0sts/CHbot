@@ -50,7 +50,6 @@ export type NightSubPhase =
   | 'fox'
   | 'pyromaniac'
   | 'docteur'
-  | 'necromancer'
   | 'sectarian'
   | 'infectfather'
   | 'dogwolf';

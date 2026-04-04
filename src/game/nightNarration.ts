@@ -141,11 +141,8 @@ export function buildNightRoadmap(session: GameSession): string {
     lines.push(`_(Infect P\u00e8re des Loups) \u2014 peut infecter la victime des loups (1 fois) \u00b7 fil priv\u00e9_`);
   }
 
-  if (session.necromancerId()) {
-    const deadCount = [...session.players.values()].filter(p => !p.alive).length;
-    if (deadCount > 0) {
-      lines.push(`${i++}. **N\u00e9cromancien** \u2014 inspecte un mort pour conna\u00eetre son r\u00f4le _\u00b7 fil priv\u00e9_`);
-    }
+  if (session.necromancerId() && session.necromancerThreadId) {
+    lines.push(`_(passif) **N\u00e9cromancien** \u2014 les morts rejoignent son Antre des Morts (fil priv\u00e9 continu)_`);
   }
 
   if (session.sectarianId() && session.sectarianGroups.size > 0) {
