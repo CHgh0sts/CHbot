@@ -14,6 +14,7 @@ import {
   registerSlashCommandsForGuild,
 } from './registerSlashCommands';
 import { runLgTest } from './commands/lgTest';
+import { handleLgInfo } from './game/lgInfo';
 import {
   runLgConfig,
   runLgEnd,
@@ -355,6 +356,11 @@ async function handleSlash(
 
   if (commandName === 'lg-test') {
     await runLgTest(interaction);
+    return;
+  }
+
+  if (commandName === 'lg-info') {
+    await handleLgInfo(interaction);
     return;
   }
 

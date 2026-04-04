@@ -310,6 +310,45 @@ export const slashCommands = [
     description:
       '[Dev] Envoie des messages fictifs pour prévisualiser le rendu des annonces (salon actuel)',
   },
+  {
+    name: 'lg-info',
+    description: 'Affiche la fiche compl\u00e8te d\u2019un r\u00f4le du jeu Loup-Garou',
+    options: [
+      {
+        name: 'role',
+        description: 'Le r\u00f4le \u00e0 afficher',
+        type: 3,
+        required: true,
+        choices: [
+          { name: 'Loup-Garou',                        value: 'werewolf' },
+          { name: 'Villageois',                         value: 'villager' },
+          { name: 'Voyante',                            value: 'seer' },
+          { name: 'Sorci\u00e8re',                     value: 'witch' },
+          { name: 'Chasseur',                           value: 'hunter' },
+          { name: 'Cupidon',                            value: 'cupid' },
+          { name: 'Garde du Corps',                     value: 'guard' },
+          { name: 'Voleur',                             value: 'thief' },
+          { name: 'Ange',                               value: 'angel' },
+          { name: 'Petite Fille',                       value: 'little_girl' },
+          { name: 'Corbeau',                            value: 'raven' },
+          { name: 'Chaperon Rouge',                     value: 'red_riding_hood' },
+          { name: 'Idiot du Village',                   value: 'fool_of_village' },
+          { name: 'Ancien',                             value: 'elder' },
+          { name: 'Grand M\u00e9chant Loup',           value: 'big_bad_wolf' },
+          { name: 'Loup-Blanc',                         value: 'white_werewolf' },
+          { name: 'Joueur de Fl\u00fbte',              value: 'pied_piper' },
+          { name: 'Chevalier \u00e0 l\u2019\u00c9p\u00e9e Rouill\u00e9e', value: 'rusty_sword_knight' },
+          { name: 'Bouc \u00c9missaire',               value: 'scapegoat' },
+          { name: 'Enfant Sauvage',                     value: 'wild_child' },
+          { name: 'Renard',                             value: 'fox' },
+          { name: 'Pyromane',                           value: 'pyromaniac' },
+          { name: "Montreur d\u2019Ours",              value: 'bear_tamer' },
+          { name: 'Deux S\u0153urs',                   value: 'two_sisters' },
+          { name: 'Trois Fr\u00e8res',                 value: 'three_brothers' },
+        ],
+      },
+    ],
+  },
 ];
 
 
