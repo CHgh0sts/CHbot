@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AttachmentBuilder,
   Client,
   GuildTextBasedChannel,
@@ -34,6 +34,8 @@ import {
 import { sendComponentsToPlayerThread } from '../../services/SecretThreadService';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import { runNightSequence } from './nightPhase';
+import { runScapegoatDeathChoice } from '../scapegoat';
+import { checkWildChildTransform } from '../wildChild';
 
 function voteKey(channelId: string, voterId: string): string {
   return `${channelId}:vote:${voterId}`;
@@ -139,8 +141,26 @@ export async function startDayPhase(
     );
 
     const foolId = session.foolOfVillageId();
+    const bannedIds = session.scapegoatVoteBannedIds;
+    session.scapegoatVoteBannedIds = new Set();
+
+    if (bannedIds.size > 0) {
+      const bannedNames = [...bannedIds]
+        .map((id) => session.getPlayer(id)?.displayName ?? `<@${id}>`)
+        .join(', ');
+      await textChannel.send({
+        embeds: [
+          publicEmbed(
+            'Bouc \u00c9missaire \u2014 Interdictions de vote',
+            `Suite au sacrifice du **Bouc \u00c9missaire**, les joueurs suivants **ne peuvent pas voter** ce tour :\n${bannedNames}`
+          ).setColor(0x95a5a6),
+        ],
+      });
+    }
+
     const voters = alive.filter((id) => {
       if (id === foolId && !session.foolOfVillageCanVote) return false;
+      if (bannedIds.has(id)) return false;
       return true;
     });
 
@@ -229,13 +249,20 @@ export async function startDayPhase(
       .map(([t]) => t);
 
     let singleWinner: string | null = null;
+    let scapegoatTriggered = false;
     if (tied.length === 1 && maxScore > 0) {
       singleWinner = tied[0]!;
-    } else if (tied.length > 1 && maxScore > 0 && session.compositionConfig.tiebreakerRandom) {
-      singleWinner = tied[Math.floor(Math.random() * tied.length)]!;
-      await textChannel.send({
-        content: `**\u00c9galit\u00e9 au vote** \u2014 tirage au sort : <@${singleWinner}> est d\u00e9sign\u00e9\u00b7e.`,
-      });
+    } else if (tied.length > 1 && maxScore > 0) {
+      const sgId = session.scapegoatId();
+      if (sgId) {
+        singleWinner = sgId;
+        scapegoatTriggered = true;
+      } else if (session.compositionConfig.tiebreakerRandom) {
+        singleWinner = tied[Math.floor(Math.random() * tied.length)]!;
+        await textChannel.send({
+          content: `**\u00c9galit\u00e9 au vote** \u2014 tirage au sort : <@${singleWinner}> est d\u00e9sign\u00e9\u00b7e.`,
+        });
+      }
     }
 
     await textChannel.send({
@@ -273,6 +300,32 @@ export async function startDayPhase(
     } else {
       const victim = singleWinner;
       const victimPlayer = session.getPlayer(victim);
+
+      // Bouc \u00c9missaire : sacrifice lors d\u2019\u00e9galit\u00e9
+      if (scapegoatTriggered) {
+        session.kill(victim);
+        await demotePlayersToStageAudience(textChannel.guild, session, [victim]);
+        const sgName = victimPlayer?.displayName ?? 'Bouc';
+        await textChannel.send({
+          embeds: [
+            publicEmbed(
+              '\u00c9galit\u00e9 au vote \u2014 Bouc \u00c9missaire',
+              `**${sgName}** (<@${victim}>) est le **Bouc \u00c9missaire** \u2014 sacrifi\u00e9\u00b7e lors de l\u2019\u00e9galit\u00e9 des votes.\n\nIl/elle choisit maintenant qui pourra voter lors du prochain tour.`
+            ).setColor(0x95a5a6),
+          ],
+        });
+        await runScapegoatDeathChoice(client, session, victim);
+        await checkWildChildTransform(client, session, textChannel, [victim]);
+        session.dayVoteCount++;
+        const winCheck = session.checkVictory();
+        if (winCheck) {
+          session.phase = 'ended';
+          await presentGameOverPanel(client, session, textChannel, winCheck);
+          return;
+        }
+        await runNightSequence(client, session, textChannel);
+        return;
+      }
 
       if (isFirstVillageVote && victimPlayer?.role === Role.Angel) {
         session.kill(victim);
@@ -368,6 +421,7 @@ export async function startDayPhase(
           session,
           finalDeaths
         );
+        await checkWildChildTransform(client, session, textChannel, finalDeaths);
       }
 
       let voteEmbed = publicEmbed('R\u00e9sultat du vote', desc).setColor(0xe67e22);

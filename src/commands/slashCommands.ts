@@ -140,6 +140,41 @@ export const slashCommands = [
         required: false,
       },
       {
+        name: 'loup_blanc',
+        description:
+          'Loup-Blanc : oui = loup solo qui peut tuer un loup en secret toutes les nuits paires, gagne seul si dernier survivant',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'joueur_de_flute',
+        description:
+          'Joueur de Fl\u00fbte : oui = ensorcelle 2 joueurs/nuit, gagne seul quand tous les vivants sont ensorcel\u00e9s',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'chevalier_rouilee',
+        description:
+          'Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e : oui = si d\u00e9vor\u00e9 par les loups, le 1er loup alpha meurt \u00e0 l\u2019aube suivante',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'bouc_emissaire',
+        description:
+          'Bouc \u00c9missaire : oui = meurt en cas d\u2019\u00e9galit\u00e9 au vote, puis choisit qui peut voter',
+        type: 5,
+        required: false,
+      },
+      {
+        name: 'enfant_sauvage',
+        description:
+          'Enfant Sauvage : oui = village au d\u00e9part, se transforme en loup si son mod\u00e8le (choisi nuit 1) meurt',
+        type: 5,
+        required: false,
+      },
+      {
         name: 'tiebreaker_random',
         description:
           '\u00c9galit\u00e9 au vote : oui = tirage au sort parmi les ex-aequo (non = personne ne meurt)',

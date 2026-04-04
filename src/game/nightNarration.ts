@@ -65,7 +65,19 @@ export function buildNightRoadmap(session: GameSession): string {
 
   if (session.witchId()) {
     lines.push(
-      `${i++}. **Sorcière** — potions de vie et de mort _· fil privé_`
+      `${i++}. **Sorci\u00e8re** \u2014 potions de vie et de mort _\u00b7 fil priv\u00e9_`
+    );
+  }
+
+  if (session.whiteWerewolfId() && session.nightNumber % 2 === 0) {
+    lines.push(
+      `${i++}. **Loup-Blanc** \u2014 peut \u00e9liminer un loup en secret (nuit paire) _\u00b7 fil priv\u00e9_`
+    );
+  }
+
+  if (session.piedPiperId()) {
+    lines.push(
+      `${i++}. **Joueur de Fl\u00fbte** \u2014 ensorcelle 2 joueurs vivants _\u00b7 fil priv\u00e9_`
     );
   }
 
@@ -78,6 +90,18 @@ export function buildNightRoadmap(session: GameSession): string {
   if (session.elderId() && !session.elderSurvivedAttack) {
     lines.push(
       `_(passif) **Ancien** \u2014 survivra \u00e0 la 1re attaque des loups_`
+    );
+  }
+
+  if (session.rustySwordKnightId()) {
+    lines.push(
+      `_(passif) **Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e** \u2014 si d\u00e9vor\u00e9, le 1er loup meurt \u00e0 l\u2019aube suivante_`
+    );
+  }
+
+  if (session.wildChildId() && session.nightNumber === 1) {
+    lines.push(
+      `${i++}. **Enfant Sauvage** \u2014 choisit son mod\u00e8le (nuit 1 uniquement) _\u00b7 fil priv\u00e9_`
     );
   }
 

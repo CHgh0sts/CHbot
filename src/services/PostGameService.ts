@@ -1,4 +1,4 @@
-import {
+﻿import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -57,19 +57,25 @@ function canUsePostGameButtons(
   return false;
 }
 
-export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel';
+export type GameOverWin = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper';
 
 /** Joueurs du camp victorieux (vivants ou morts), selon le rôle final en base. */
 function winningUserIds(session: GameSession, win: GameOverWin): string[] {
   const players = [...session.players.values()];
   if (win === 'wolves') {
-    return players.filter((p) => p.role === Role.Werewolf).map((p) => p.userId);
+    return players.filter((p) => session.isWolfRole(p.role)).map((p) => p.userId);
   }
   if (win === 'village') {
-    return players.filter((p) => p.role !== Role.Werewolf).map((p) => p.userId);
+    return players.filter((p) => !session.isWolfRole(p.role)).map((p) => p.userId);
   }
   if (win === 'angel') {
     return players.filter((p) => p.role === Role.Angel).map((p) => p.userId);
+  }
+  if (win === 'whitewerewolf') {
+    return players.filter((p) => p.role === Role.WhiteWerewolf).map((p) => p.userId);
+  }
+  if (win === 'piedpiper') {
+    return players.filter((p) => p.role === Role.PiedPiper).map((p) => p.userId);
   }
   const lg = session.loversGroup;
   if (lg && lg.length >= 2) {
@@ -115,7 +121,11 @@ function buildSummaryField(session: GameSession, win: GameOverWin): string {
         ? '**Village** (tous les non-loups)'
         : win === 'angel'
           ? '**Ange** (victoire solo au 1er vote)'
-          : '**Amoureux**';
+          : win === 'whitewerewolf'
+            ? '**Loup-Blanc** (solo \u2014 dernier survivant)'
+            : win === 'piedpiper'
+              ? '**Joueur de Fl\u00fbte** (solo \u2014 tous ensorcel\u00e9s)'
+              : '**Amoureux**';
 
   const header = [
     `**Nuits** : **${nights}** · **Joueurs** : **${n}** · **Survivants** : **${aliveN}**`,

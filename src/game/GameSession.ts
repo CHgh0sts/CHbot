@@ -1,4 +1,4 @@
-import type { Client } from 'discord.js';
+﻿import type { Client } from 'discord.js';
 import { Role, type GamePhase, type NightSubPhase, type PlayerState } from '../types';
 import {
   buildRoles,
@@ -101,6 +101,23 @@ export class GameSession {
   /** `true` si l'Ancien a été éliminé par le vote du village (malédiction active). */
   elderCursed = false;
 
+  /** Joueur désigné comme modèle par l'Enfant Sauvage nuit 1. */
+  wildChildModelId: string | null = null;
+  /** `true` une fois que l'Enfant Sauvage s'est transformé en loup. */
+  wildChildBecameWolf = false;
+
+  /** IDs des joueurs ensorcelés par le Joueur de Flûte. */
+  enchantedPlayerIds: Set<string> = new Set();
+
+  /**
+   * `true` si le Chevalier à l'épée rouillée a été dévoré par les loups cette nuit.
+   * Le 1er loup (alpha) mourra à l'aube suivante.
+   */
+  rustKillPending = false;
+
+  /** IDs des joueurs interdits de vote au prochain tour (choix du Bouc Émissaire). */
+  scapegoatVoteBannedIds: Set<string> = new Set();
+
   /**
    * Dernière cible **réellement protégée** par le Garde (pour interdire de la reprendre la nuit suivante).
    * Inchangé si le garde n’a pas joué (timeout).
@@ -143,7 +160,9 @@ export class GameSession {
   }
 
   isWolfRole(role: Role): boolean {
-    return role === Role.Werewolf || role === Role.BigBadWolf;
+    if (role === Role.Werewolf || role === Role.BigBadWolf || role === Role.WhiteWerewolf) return true;
+    if (role === Role.WildChild && this.wildChildBecameWolf) return true;
+    return false;
   }
 
   wolfIds(): string[] {
@@ -239,6 +258,41 @@ export class GameSession {
   bigBadWolfId(): string | undefined {
     const p = [...this.players.values()].find(
       (x) => x.role === Role.BigBadWolf && x.alive
+    );
+    return p?.userId;
+  }
+
+  whiteWerewolfId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.WhiteWerewolf && x.alive
+    );
+    return p?.userId;
+  }
+
+  piedPiperId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.PiedPiper && x.alive
+    );
+    return p?.userId;
+  }
+
+  rustySwordKnightId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.RustySwordKnight && x.alive
+    );
+    return p?.userId;
+  }
+
+  scapegoatId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.Scapegoat && x.alive
+    );
+    return p?.userId;
+  }
+
+  wildChildId(): string | undefined {
+    const p = [...this.players.values()].find(
+      (x) => x.role === Role.WildChild && x.alive
     );
     return p?.userId;
   }
@@ -354,6 +408,11 @@ export class GameSession {
     this.foolOfVillageCanVote = true;
     this.elderSurvivedAttack = false;
     this.elderCursed = false;
+    this.wildChildModelId = null;
+    this.wildChildBecameWolf = false;
+    this.enchantedPlayerIds = new Set();
+    this.rustKillPending = false;
+    this.scapegoatVoteBannedIds = new Set();
   }
 
   async hydrateDisplayNames(client: Client): Promise<void> {

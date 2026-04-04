@@ -15,6 +15,11 @@ export interface LgConfigOptions {
   includeFoolOfVillage: boolean | null;
   includeElder: boolean | null;
   includeBigBadWolf: boolean | null;
+  includeWhiteWerewolf: boolean | null;
+  includePiedPiper: boolean | null;
+  includeRustySwordKnight: boolean | null;
+  includeScapegoat: boolean | null;
+  includeWildChild: boolean | null;
   tiebreakerRandom: boolean | null;
   skipFirstNightKill: boolean | null;
   revealDeadRoles: boolean | null;

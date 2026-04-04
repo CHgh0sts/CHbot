@@ -38,6 +38,16 @@ export interface CompositionConfig {
   includeElder: boolean;
   /** **Grand Méchant Loup** : loup + chaque nuit, tant qu'aucun loup n'est mort, il tue un joueur supplémentaire seul en fil privé. */
   includeBigBadWolf: boolean;
+  /** **Loup-Blanc** : camp Solo. Joue avec la meute ; toutes les nuits paires il peut éliminer secrètement un loup. Gagne seul s'il est le dernier survivant. */
+  includeWhiteWerewolf: boolean;
+  /** **Joueur de Flûte** : camp Solo. Chaque nuit, il ensorcelle 2 joueurs vivants. Gagne quand tous les joueurs vivants (sauf lui) sont ensorcelés. */
+  includePiedPiper: boolean;
+  /** **Chevalier à l'épée rouillée** : camp Village. Passif : quand il est dévoré par les loups, le 1er loup (ordre alpha) meurt à l'aube suivante. */
+  includeRustySwordKnight: boolean;
+  /** **Bouc Émissaire** : camp Village. Passif : en cas d'égalité au vote, c'est lui qui meurt à la place. Il choisit ensuite qui peut voter au prochain jour. */
+  includeScapegoat: boolean;
+  /** **Enfant Sauvage** : camp Village au départ. Nuit 1, il choisit un modèle. Si le modèle meurt, il rejoint les loups-garous. */
+  includeWildChild: boolean;
   /** **Tirage au sort en cas d'égalité** au vote du village : un ex-aequo est éliminé aléatoirement (sinon personne ne meurt). */
   tiebreakerRandom: boolean;
   /** **Première nuit sans meurtre** : les loups se réunissent mais n'éliminent personne la nuit 1. */
@@ -80,6 +90,11 @@ export function fixedCompositionTotal(c: CompositionConfig): number | null {
   if (c.includeFoolOfVillage) fixed++;
   if (c.includeElder) fixed++;
   if (c.includeBigBadWolf) fixed++;
+  if (c.includeWhiteWerewolf) fixed++;
+  if (c.includePiedPiper) fixed++;
+  if (c.includeRustySwordKnight) fixed++;
+  if (c.includeScapegoat) fixed++;
+  if (c.includeWildChild) fixed++;
   return w + fixed + c.villagerCount;
 }
 
@@ -100,6 +115,11 @@ export function villagerCountToMatchMinPlayers(c: CompositionConfig): number {
   if (c.includeFoolOfVillage) fixed++;
   if (c.includeElder) fixed++;
   if (c.includeBigBadWolf) fixed++;
+  if (c.includeWhiteWerewolf) fixed++;
+  if (c.includePiedPiper) fixed++;
+  if (c.includeRustySwordKnight) fixed++;
+  if (c.includeScapegoat) fixed++;
+  if (c.includeWildChild) fixed++;
   return Math.max(0, c.minPlayers - w - fixed);
 }
 
@@ -119,6 +139,11 @@ export function defaultCompositionConfig(): CompositionConfig {
   const includeFoolOfVillage = false;
   const includeElder = false;
   const includeBigBadWolf = false;
+  const includeWhiteWerewolf = false;
+  const includePiedPiper = false;
+  const includeRustySwordKnight = false;
+  const includeScapegoat = false;
+  const includeWildChild = false;
   const tiebreakerRandom = false;
   const skipFirstNightKill = false;
   const revealDeadRoles = true;
@@ -142,6 +167,11 @@ export function defaultCompositionConfig(): CompositionConfig {
     includeFoolOfVillage,
     includeElder,
     includeBigBadWolf,
+    includeWhiteWerewolf,
+    includePiedPiper,
+    includeRustySwordKnight,
+    includeScapegoat,
+    includeWildChild,
     tiebreakerRandom,
     skipFirstNightKill,
     revealDeadRoles,
@@ -175,6 +205,11 @@ export function cloneCompositionConfig(c: CompositionConfig): CompositionConfig 
     includeFoolOfVillage: c.includeFoolOfVillage,
     includeElder: c.includeElder,
     includeBigBadWolf: c.includeBigBadWolf,
+    includeWhiteWerewolf: c.includeWhiteWerewolf,
+    includePiedPiper: c.includePiedPiper,
+    includeRustySwordKnight: c.includeRustySwordKnight,
+    includeScapegoat: c.includeScapegoat,
+    includeWildChild: c.includeWildChild,
     tiebreakerRandom: c.tiebreakerRandom,
     skipFirstNightKill: c.skipFirstNightKill,
     revealDeadRoles: c.revealDeadRoles,
@@ -210,6 +245,11 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeFoolOfVillage) fixed++;
   if (config.includeElder) fixed++;
   if (config.includeBigBadWolf) fixed++;
+  if (config.includeWhiteWerewolf) fixed++;
+  if (config.includePiedPiper) fixed++;
+  if (config.includeRustySwordKnight) fixed++;
+  if (config.includeScapegoat) fixed++;
+  if (config.includeWildChild) fixed++;
 
   let villagers: number;
   if (config.villagerCount === null) {
@@ -248,6 +288,11 @@ export function buildRoles(playerCount: number, config: CompositionConfig): Role
   if (config.includeFoolOfVillage) roles.push(Role.FoolOfVillage);
   if (config.includeElder) roles.push(Role.Elder);
   if (config.includeBigBadWolf) roles.push(Role.BigBadWolf);
+  if (config.includeWhiteWerewolf) roles.push(Role.WhiteWerewolf);
+  if (config.includePiedPiper) roles.push(Role.PiedPiper);
+  if (config.includeRustySwordKnight) roles.push(Role.RustySwordKnight);
+  if (config.includeScapegoat) roles.push(Role.Scapegoat);
+  if (config.includeWildChild) roles.push(Role.WildChild);
   for (let i = 0; i < villagers; i++) roles.push(Role.Villager);
 
   return roles;
@@ -351,6 +396,16 @@ export function roleLabelFr(role: Role): string {
       return 'Ancien';
     case Role.BigBadWolf:
       return 'Grand Mechant Loup';
+    case Role.WhiteWerewolf:
+      return 'Loup-Blanc';
+    case Role.PiedPiper:
+      return 'Joueur de Flute';
+    case Role.RustySwordKnight:
+      return 'Chevalier a l\u2019epee rouilee';
+    case Role.Scapegoat:
+      return 'Bouc Emissaire';
+    case Role.WildChild:
+      return 'Enfant Sauvage';
     default:
       return role;
   }
@@ -385,6 +440,16 @@ export function rolePowerBlurb(role: Role): string {
       return 'Tu peux **survivre a la 1re attaque des loups** : cette nuit-la, l attaque est absorbee (annoncee comme resistance mysterieuse, sans revealer ton identite). Si le village te vote pour t eliminer, tous les **roles speciaux du camp Village perdent leurs pouvoirs** pour le reste de la partie (malediction).';
     case Role.BigBadWolf:
       return 'Tu votes chaque nuit avec la **meute** (fil Meute + `/lg-vote`). En plus, tant qu aucun loup n est mort, tu peux tuer **un joueur supplementaire** seul dans ton fil prive apres le vote de meute. Si un loup meurt, tu perds ce pouvoir bonus mais continues de jouer avec la meute.';
+    case Role.WhiteWerewolf:
+      return 'Tu joues comme un loup ordinaire (fil Meute, vote `/lg-vote`). En plus, **toutes les nuits paires** (nuit 2, 4, 6\u2026), tu peux choisir en secret d\u2019\u00e9liminer **un loup-garou de la meute** (tu peux aussi passer). Tu gagnes **seul** si tu es le **dernier survivant** de la partie.';
+    case Role.PiedPiper:
+      return 'Chaque nuit, tu **ensorcel\u00e8s 2 joueurs vivants** (non encore ensorcel\u00e9s) via ton fil priv\u00e9. Tu gagnes **seul** quand **tous les survivants** (sauf toi) sont ensorcel\u00e9s. Si tu meurs, les joueurs ensorcel\u00e9s restent ensorcel\u00e9s mais tu ne peux plus gagner.';
+    case Role.RustySwordKnight:
+      return 'Pouvoir entierement **passif** : si tu es d\u00e9vor\u00e9 par les loups (attaque de meute), le **premier loup par ordre alphabetique** meurt \u00e0 l\u2019aube suivante d\u2019une infection mysteieuse. La sorciere peut annuler ta mort, ce qui annule aussi l\u2019infection.';
+    case Role.Scapegoat:
+      return 'Pouvoir entierement **passif** : en cas d\u2019**\u00e9galit\u00e9 au vote** du village, c\u2019est **toi** qui es \u00e9limin\u00e9 \u00e0 la place (avant le tirage au sort). Apres ta mort, tu **choisis qui pourra voter** lors du prochain vote (tu peux tout interdir ou tout autoriser).';
+    case Role.WildChild:
+      return 'La 1re nuit, tu choisis un **mod\u00e8le** parmi les joueurs vivants (dans ton fil priv\u00e9). Si ton mod\u00e8le meurt, tu te **transformes en Loup-Garou** et rejoins la meute. Tant que le mod\u00e8le est en vie, tu joues du c\u00f4t\u00e9 du village.';
     case Role.LittleGirl:
       return '**Chaque nuit** pendant le **vote des loups**, tu peux **espionner** : tu apprends qui la meute a majoritairement désigné. **Risque** : **50 %** de chances d’être **repérée** — tu meurs **à la place** de cette victime (elle est alors **épargnée** par les loups ce soir).';
     case Role.Villager:
@@ -441,6 +506,11 @@ export function formatCompositionReadable(
   if (c.includeFoolOfVillage) lines.push(`• **${roleLabelFr(Role.FoolOfVillage)}** × **1**`);
   if (c.includeElder) lines.push(`• **${roleLabelFr(Role.Elder)}** × **1**`);
   if (c.includeBigBadWolf) lines.push(`• **${roleLabelFr(Role.BigBadWolf)}** × **1** _(loup)_`);
+  if (c.includeWhiteWerewolf) lines.push(`• **${roleLabelFr(Role.WhiteWerewolf)}** × **1** _(solo/loup)_`);
+  if (c.includePiedPiper) lines.push(`• **${roleLabelFr(Role.PiedPiper)}** × **1** _(solo)_`);
+  if (c.includeRustySwordKnight) lines.push(`• **${roleLabelFr(Role.RustySwordKnight)}** × **1**`);
+  if (c.includeScapegoat) lines.push(`• **${roleLabelFr(Role.Scapegoat)}** × **1**`);
+  if (c.includeWildChild) lines.push(`• **${roleLabelFr(Role.WildChild)}** × **1**`);
   if (c.includeLittleGirl) {
     lines.push(`• **${roleLabelFr(Role.LittleGirl)}** × **1**`);
   }
@@ -480,7 +550,12 @@ export function formatCompositionReadable(
     `**Chaperon Rouge** : ${c.includeRedRidingHood ? '**activée** — protégée des loups tant que le Chasseur est en vie' : '**désactivée**'}`,
     `**Idiot du village** : ${c.includeFoolOfVillage ? '**activé** — survit au 1er vote du village (perd son vote)' : '**désactivé**'}`,
     `**Ancien** : ${c.includeElder ? '**activé** — survit à la 1re attaque loup ; malédiction si tué par le village' : '**désactivé**'}`,
-    `**Grand Méchant Loup** : ${c.includeBigBadWolf ? '**activ\u00e9** \u2014 extra-kill tant qu\u2019aucun loup n\u2019est mort' : '**désactivé**'}`,
+    `**Loup-Blanc** : ${c.includeWhiteWerewolf ? "**activ\u00e9** \u2014 tue un loup toutes les 2 nuits, gagne seul si dernier survivant" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Joueur de Fl\u00fbte** : ${c.includePiedPiper ? "**activ\u00e9** \u2014 ensorcelle 2 joueurs/nuit, gagne si tous ensorcel\u00e9s" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e** : ${c.includeRustySwordKnight ? "**activ\u00e9** \u2014 1er loup alpha meurt si le chevalier est d\u00e9vor\u00e9" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Bouc \u00c9missaire** : ${c.includeScapegoat ? "**activ\u00e9** \u2014 meurt en cas d\u2019\u00e9galit\u00e9, choisit ensuite qui vote" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Enfant Sauvage** : ${c.includeWildChild ? "**activ\u00e9** \u2014 rejoint les loups si son mod\u00e8le meurt" : "**d\u00e9sactiv\u00e9**"}`,
+    `**Grand M\u00e9chant Loup** : ${c.includeBigBadWolf ? "**activ\u00e9** \u2014 extra-kill tant qu\u2019aucun loup n\u2019est mort" : "**d\u00e9sactiv\u00e9**"}`,
     `**Égalité vote → tirage au sort** : ${c.tiebreakerRandom ? '**oui** — un ex-aequo éliminé aléatoirement' : 'non — personne ne meurt'}`,
     `**1re nuit sans meurtre** : ${c.skipFirstNightKill ? '**oui** \u2014 loups se r\u00e9unissent mais n\u2019\u00e9liminent personne nuit 1' : 'non'}`,
     `**Petite fille** : ${c.includeLittleGirl ? '**activée**' : '**désactivée**'}`,
@@ -491,6 +566,7 @@ export function formatCompositionReadable(
     `**Annonce des morts** : ${shouldRevealDeadRoles(c) ? 'rôle affiché publiquement' : c.darkNightMode ? 'rôle **jamais** public (nuit sombre)' : 'rôle masqué (seulement la mention)'}`,
   ].join('\n');
 }
+
 
 
 

@@ -4,22 +4,28 @@ import { statsApiBaseUrl, statsApiEnabled, statsApiSecret } from '../config';
 
 const FETCH_TIMEOUT_MS = 8_000;
 
-type WinSide = 'wolves' | 'village' | 'lovers' | 'angel';
+type WinSide = 'wolves' | 'village' | 'lovers' | 'angel' | 'whitewerewolf' | 'piedpiper';
 
 function winningUserIds(session: GameSession, win: WinSide): string[] {
   const players = [...session.players.values()];
   if (win === 'wolves') {
     return players
-      .filter((p) => p.role === Role.Werewolf)
+      .filter((p) => session.isWolfRole(p.role))
       .map((p) => p.userId);
   }
   if (win === 'village') {
     return players
-      .filter((p) => p.role !== Role.Werewolf)
+      .filter((p) => !session.isWolfRole(p.role))
       .map((p) => p.userId);
   }
   if (win === 'angel') {
     return players.filter((p) => p.role === Role.Angel).map((p) => p.userId);
+  }
+  if (win === 'whitewerewolf') {
+    return players.filter((p) => p.role === Role.WhiteWerewolf).map((p) => p.userId);
+  }
+  if (win === 'piedpiper') {
+    return players.filter((p) => p.role === Role.PiedPiper).map((p) => p.userId);
   }
   const lg = session.loversGroup;
   if (lg && lg.length >= 2) {

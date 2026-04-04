@@ -14,6 +14,11 @@ export enum Role {
   FoolOfVillage = 'FOOL_OF_VILLAGE',
   Elder = 'ELDER',
   BigBadWolf = 'BIG_BAD_WOLF',
+  WhiteWerewolf = 'WHITE_WEREWOLF',
+  PiedPiper = 'PIED_PIPER',
+  RustySwordKnight = 'RUSTY_SWORD_KNIGHT',
+  Scapegoat = 'SCAPEGOAT',
+  WildChild = 'WILD_CHILD',
 }
 
 export type GamePhase = 'lobby' | 'night' | 'day' | 'ended';
@@ -27,7 +32,10 @@ export type NightSubPhase =
   | 'wolves'
   | 'witch'
   | 'raven'
-  | 'bigbadwolf';
+  | 'bigbadwolf'
+  | 'whitewolf'
+  | 'piedpiper'
+  | 'wildchild';
 
 export interface PlayerState {
   userId: string;

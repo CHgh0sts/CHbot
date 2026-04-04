@@ -42,6 +42,9 @@ import {
 import { runCupidPhase } from '../cupid';
 import { runRavenPhase } from '../raven';
 import { runBigBadWolfPhase } from '../bigbadwolf';
+import { runWhiteWolfPhase } from '../whiteWolf';
+import { runPiedPiperPhase } from '../piedPiper';
+import { runWildChildPhase, checkWildChildTransform } from '../wildChild';
 import { expandDeathsWithHunterAndLovers } from '../deathChain';
 import {
   sendDawnApproaching,
@@ -759,6 +762,28 @@ export async function resolveNightDeaths(
   session: GameSession,
   textChannel: GuildTextBasedChannel
 ): Promise<void> {
+  // Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e : infection de la nuit pr\u00e9c\u00e9dente
+  if (session.rustKillPending) {
+    session.rustKillPending = false;
+    const wolves = session
+      .wolfIds()
+      .map((id) => ({ id, name: session.getPlayer(id)?.displayName ?? '' }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
+    const firstWolf = wolves[0];
+    if (firstWolf) {
+      session.pendingNightDeaths.push(firstWolf.id);
+      await textChannel.send({
+        embeds: [
+          publicEmbed(
+            'Infection\u2026 l\u2019\u00e9p\u00e9e rouill\u00e9e fait son oeuvre',
+            'Le **Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e** avait \u00e9t\u00e9 d\u00e9vor\u00e9 par les loups.\n\n' +
+              'L\u2019infection se propage : un loup succombe ce matin.'
+          ).setColor(0x7f8c8d),
+        ],
+      });
+    }
+  }
+
   const deaths: string[] = [];
   if (session.wolfTargetId) deaths.push(session.wolfTargetId);
   deaths.push(...session.pendingNightDeaths);
@@ -782,6 +807,18 @@ export async function resolveNightDeaths(
   }
 
   session.pendingNightDeaths = [];
+
+  // Chevalier \u00e0 l\u2019\u00e9p\u00e9e rouill\u00e9e : si tu\u00e9 par les loups (wolfTargetId), programmer l\u2019infection
+  if (
+    session.wolfTargetId &&
+    finalIds.includes(session.wolfTargetId) &&
+    session.getPlayer(session.wolfTargetId)?.role === Role.RustySwordKnight
+  ) {
+    session.rustKillPending = true;
+  }
+
+  // Enfant Sauvage : v\u00e9rifier si le mod\u00e8le vient de mourir
+  await checkWildChildTransform(client, session, textChannel, finalIds);
 
   const reveal = shouldRevealDeadRoles(session.compositionConfig);
   const desc =
@@ -844,6 +881,15 @@ export async function runNightSequence(
       );
     }
     await runThiefPhase(client, session, textChannel);
+
+    if (session.nightNumber === 1 && session.wildChildId()) {
+      await sendNightBeat(
+        textChannel,
+        'L\u2019Enfant Sauvage choisit\u2026',
+        'L\u2019**Enfant Sauvage** d\u00e9signe son **mod\u00e8le** (nuit 1 uniquement). _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runWildChildPhase(client, session, textChannel);
 
     if (session.nightNumber === 1 && !session.cupidNightDone && session.cupidId()) {
       await sendNightBeat(
@@ -914,6 +960,24 @@ export async function runNightSequence(
       );
     }
     await runBigBadWolfPhase(client, session, textChannel);
+
+    if (session.whiteWerewolfId() && session.nightNumber % 2 === 0) {
+      await sendNightBeat(
+        textChannel,
+        'Loup-Blanc \u2014 frappe secr\u00e8te\u2026',
+        'Le **Loup-Blanc** peut \u00e9liminer un loup en secret (nuit paire). _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runWhiteWolfPhase(client, session, textChannel);
+
+    if (session.piedPiperId()) {
+      await sendNightBeat(
+        textChannel,
+        'La m\u00e9lodie du Joueur de Fl\u00fbte\u2026',
+        'Le **Joueur de Fl\u00fbte** ensorcelle 2 joueurs. _\u00b7 fil priv\u00e9._'
+      );
+    }
+    await runPiedPiperPhase(client, session, textChannel);
 
     await sendDawnApproaching(textChannel, session);
     await resolveNightDeaths(client, session, textChannel);

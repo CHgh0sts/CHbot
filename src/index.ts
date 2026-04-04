@@ -42,6 +42,10 @@ import { fulfillVote } from './game/phases/dayPhase';
 import { fulfillCupidPick } from './game/cupid';
 import { fulfillRaven } from './game/raven';
 import { fulfillBigBadWolf } from './game/bigbadwolf';
+import { fulfillWhiteWolf } from './game/whiteWolf';
+import { fulfillPiedPiper } from './game/piedPiper';
+import { fulfillWildChild } from './game/wildChild';
+import { fulfillScapegoat } from './game/scapegoat';
 import { fulfillHunterSelect } from './game/hunter';
 import {
   handleAfterGameClose,
@@ -182,6 +186,11 @@ client.on(Events.MessageCreate, async (message) => {
         includeFoolOfVillage: null,
         includeElder: null,
         includeBigBadWolf: null,
+        includeWhiteWerewolf: null,
+        includePiedPiper: null,
+        includeRustySwordKnight: null,
+        includeScapegoat: null,
+        includeWildChild: null,
         tiebreakerRandom: null,
         skipFirstNightKill: null,
         revealDeadRoles: null,
@@ -375,6 +384,11 @@ async function handleSlash(
       includeFoolOfVillage: interaction.options.getBoolean('idiot_du_village'),
       includeElder: interaction.options.getBoolean('ancien'),
       includeBigBadWolf: interaction.options.getBoolean('grand_mechant_loup'),
+      includeWhiteWerewolf: interaction.options.getBoolean('loup_blanc'),
+      includePiedPiper: interaction.options.getBoolean('joueur_de_flute'),
+      includeRustySwordKnight: interaction.options.getBoolean('chevalier_rouilee'),
+      includeScapegoat: interaction.options.getBoolean('bouc_emissaire'),
+      includeWildChild: interaction.options.getBoolean('enfant_sauvage'),
       tiebreakerRandom: interaction.options.getBoolean('tiebreaker_random'),
       skipFirstNightKill: interaction.options.getBoolean('premiere_nuit_sans_meurtre'),
       revealDeadRoles: interaction.options.getBoolean('roles_morts_visibles'),
@@ -551,6 +565,32 @@ async function handleSelect(
     if (interaction.user.id !== bbwId) return;
     fulfillBigBadWolf(channelId, target);
   }
+
+  if (kind === 'whitewolf') {
+    const wwId = session.whiteWerewolfId();
+    if (interaction.user.id !== wwId) return;
+    fulfillWhiteWolf(channelId, target);
+  }
+
+  if (kind === 'piedpiper') {
+    const piperId = session.piedPiperId();
+    if (interaction.user.id !== piperId) return;
+    fulfillPiedPiper(channelId, target);
+  }
+
+  if (kind === 'wildchild') {
+    const wcId = session.wildChildId();
+    if (interaction.user.id !== wcId) return;
+    fulfillWildChild(channelId, wcId, target);
+  }
+
+  if (kind === 'scapegoat') {
+    const sgId = [...session.players.values()].find(
+      (p) => p.role === Role.Scapegoat && !p.alive
+    )?.userId;
+    if (interaction.user.id !== sgId) return;
+    fulfillScapegoat(channelId, target);
+  }
 }
 
 async function handleButton(
@@ -698,6 +738,20 @@ async function handleButton(
     const bbwId = session.bigBadWolfId();
     if (interaction.user.id !== bbwId) return;
     fulfillBigBadWolf(channelId, 'skip');
+  }
+
+  if (parts[2] === 'whitewolf' && parts[3] === 'skip') {
+    const wwId = session.whiteWerewolfId();
+    if (interaction.user.id !== wwId) return;
+    fulfillWhiteWolf(channelId, 'skip');
+  }
+
+  if (parts[2] === 'scapegoat' && parts[3] === 'skip') {
+    const sgId = [...session.players.values()].find(
+      (p) => p.role === Role.Scapegoat && !p.alive
+    )?.userId;
+    if (interaction.user.id !== sgId) return;
+    fulfillScapegoat(channelId, 'skip');
   }
 }
 
