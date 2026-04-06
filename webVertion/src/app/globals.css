@@ -1,19 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #0a0a0f;
-  --bg-panel: #111118;
-  --bg-card: #16161f;
-  --bg-hover: #1e1e2a;
-  --border: #2a2a3a;
-  --border-glow: #4a3080;
-  --text-primary: #e8e8f0;
-  --text-muted: #7a7a9a;
+  --bg-base: #07050f;
+  --bg-panel: #0d0a1a;
+  --bg-card: #121020;
+  --bg-hover: #1a162e;
+  --border: #2a2245;
+  --border-glow: #6b3fa0;
+  --gold: #c9a84c;
+  --gold-bright: #e8c96d;
+  --gold-dim: #6b5220;
+  --text-primary: #e8dcc8;
+  --text-muted: #8a7a9a;
   --accent: #7c3aed;
   --accent-glow: #9d5bff;
-  --wolf-red: #ef4444;
-  --village-green: #22c55e;
-  --solo-gold: #f59e0b;
+  --wolf-red: #c0392b;
+  --wolf-red-dim: rgba(192, 57, 43, 0.25);
+  --village-green: #1a6b3a;
+  --village-green-dim: rgba(26, 107, 58, 0.25);
+  --solo-gold: #c9870a;
+  --solo-gold-dim: rgba(201, 135, 10, 0.25);
 }
 
 * {
@@ -30,64 +36,104 @@ body {
   scrollbar-color: var(--border) transparent;
 }
 
+/* Atmospheric moon gradient on pages */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(124, 58, 237, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 100%, rgba(239, 68, 68, 0.06) 0%, transparent 60%);
+    radial-gradient(ellipse at 50% -10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(192, 57, 43, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 60%, rgba(26, 107, 58, 0.05) 0%, transparent 40%);
   pointer-events: none;
   z-index: 0;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 2px;
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* Glass card */
+/* ─── Glass card ──────────────────────────────────────────────── */
 .glass {
-  background: rgba(17, 17, 24, 0.8);
-  backdrop-filter: blur(12px);
+  background: rgba(13, 10, 26, 0.85);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: 12px;
 }
 
 .glass-hover {
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 .glass-hover:hover {
-  border-color: var(--border-glow);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+  border-color: var(--gold-dim);
+  box-shadow: 0 0 24px rgba(201, 168, 76, 0.12);
+  transform: translateY(-2px);
 }
 
-/* Glow text */
+/* ─── Role card (game card style) ───────────────────────────── */
+.role-card {
+  background: linear-gradient(165deg, #1e1530 0%, #0d0a18 60%, #07050f 100%);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.role-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 40%
+  );
+  z-index: 2;
+}
+
+.role-card-wolves { border: 2px solid var(--wolf-red); box-shadow: 0 0 20px var(--wolf-red-dim), 0 4px 24px rgba(0,0,0,0.7); }
+.role-card-village { border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(201, 168, 76, 0.15), 0 4px 24px rgba(0,0,0,0.7); }
+.role-card-solo { border: 2px solid var(--solo-gold); box-shadow: 0 0 20px var(--solo-gold-dim), 0 4px 24px rgba(0,0,0,0.7); }
+
+/* ─── Glow text ──────────────────────────────────────────────── */
 .glow-text {
-  text-shadow: 0 0 20px rgba(157, 91, 255, 0.5);
+  text-shadow: 0 0 30px rgba(157, 91, 255, 0.6);
 }
 
-/* Pulse animation for night phase */
-@keyframes pulse-wolf {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+.gold-text {
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(232, 201, 109, 0.4);
 }
 
-@keyframes pulse-village {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+/* ─── Separator ornamental ───────────────────────────────────── */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--gold-dim);
+}
+.ornament::before,
+.ornament::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
 }
 
+/* ─── Animations ─────────────────────────────────────────────── */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes float-card {
+  0%, 100% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-6px) rotate(var(--rot, 0deg)); }
 }
 
 @keyframes shimmer {
@@ -95,14 +141,30 @@ body::before {
   100% { background-position: 200% 0; }
 }
 
-.animate-float { animation: float 3s ease-in-out infinite; }
+@keyframes pulse-wolf {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.4), 0 0 20px var(--wolf-red-dim); }
+  50% { box-shadow: 0 0 0 8px rgba(192, 57, 43, 0), 0 0 20px var(--wolf-red-dim); }
+}
 
-/* Role badge colors */
+@keyframes pulse-village {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26, 107, 58, 0.4), 0 0 20px var(--village-green-dim); }
+  50% { box-shadow: 0 0 0 8px rgba(26, 107, 58, 0), 0 0 20px var(--village-green-dim); }
+}
+
+@keyframes moon-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float { animation: float 3.5s ease-in-out infinite; }
+.animate-moon-rise { animation: moon-rise 0.8s ease-out forwards; }
+
+/* ─── Role badges ─────────────────────────────────────────────── */
 .camp-village { color: var(--village-green); border-color: var(--village-green); }
-.camp-wolves { color: var(--wolf-red); border-color: var(--wolf-red); }
-.camp-solo { color: var(--solo-gold); border-color: var(--solo-gold); }
+.camp-wolves  { color: var(--wolf-red); border-color: var(--wolf-red); }
+.camp-solo    { color: var(--solo-gold); border-color: var(--solo-gold); }
 
-/* Phase banner */
+/* ─── Phase banners ──────────────────────────────────────────── */
 .phase-night {
   background: linear-gradient(135deg, #1a0a2e 0%, #0d0d1a 100%);
   border-color: #4a2080;
@@ -116,12 +178,16 @@ body::before {
   border-color: #803020;
 }
 
-/* Timer bar */
+/* ─── Timer bar ───────────────────────────────────────────────── */
 @keyframes drain {
   from { width: 100%; }
   to { width: 0%; }
 }
 
-/* Sidebar */
+/* ─── Sidebar ─────────────────────────────────────────────────── */
 .sidebar-enter { transform: translateX(100%); opacity: 0; }
 .sidebar-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s ease-out; }
+
+/* ─── Scrollbar hide ─────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

@@ -96,6 +96,20 @@ export class WebGameSession {
   nightKills: Set<string> = new Set();
   nightHeal: string | null = null;
 
+  // Bot-aligned rôles additionnels
+  wildChildModelId: string | null = null;
+  thiefNightDone = false;
+  bbwNightTargetId: string | null = null;
+  /** Vrai dès qu’un joueur avec rôle loup est mort (GML perd son bonus). */
+  wolfEverDied = false;
+  /** Loup à tuer à l’aube après dévoration du chevalier (épée rouillée). */
+  rustySwordNextDawnWolfId: string | null = null;
+  enchantedPlayerIds = new Set<string>();
+  pyroDousedIds = new Set<string>();
+  pyromaniacIgnited = false;
+  /** Groupes A/B pour le Sectaire (si partie avec Sectaire). */
+  sectPlayerGroup = new Map<string, "A" | "B">();
+
   constructor(roomId: string, config: CompositionConfig) {
     this.roomId = roomId;
     this.config = config;
@@ -104,6 +118,16 @@ export class WebGameSession {
   // ─── Role Assignment ────────────────────────────────────────────────────────
 
   assignRoles(): void {
+    this.wildChildModelId = null;
+    this.thiefNightDone = false;
+    this.bbwNightTargetId = null;
+    this.wolfEverDied = false;
+    this.rustySwordNextDawnWolfId = null;
+    this.enchantedPlayerIds.clear();
+    this.pyroDousedIds.clear();
+    this.pyromaniacIgnited = false;
+    this.sectPlayerGroup.clear();
+
     const roles = this.buildRolePool();
     const playerIds = [...this.players.keys()];
 
@@ -140,6 +164,12 @@ export class WebGameSession {
     if (hackeurPlayer) {
       // Will be set during night 1
     }
+
+    if (this.config.includeSectarian) {
+      for (const [, p] of this.players) {
+        this.sectPlayerGroup.set(p.id, Math.random() < 0.5 ? "A" : "B");
+      }
+    }
   }
 
   private buildRolePool(): RoleKey[] {
@@ -174,6 +204,23 @@ export class WebGameSession {
     if (c.includeActor) pool.push("actor");
     if (c.includeDictateur) pool.push("dictateur");
     if (c.includeHackeur) pool.push("hackeur");
+    if (c.includeThief) pool.push("thief");
+    if (c.includeRedRidingHood) pool.push("red_riding_hood");
+    if (c.includeBigBadWolf) pool.push("big_bad_wolf");
+    if (c.includePiedPiper) pool.push("pied_piper");
+    if (c.includeRustySwordKnight) pool.push("rusty_sword_knight");
+    if (c.includeWildChild) pool.push("wild_child");
+    if (c.includePyromaniac) pool.push("pyromaniac");
+    if (c.includeTwoSisters) {
+      pool.push("two_sisters");
+      pool.push("two_sisters");
+    }
+    if (c.includeThreeBrothers) {
+      pool.push("three_brothers");
+      pool.push("three_brothers");
+      pool.push("three_brothers");
+    }
+    if (c.includeSectarian) pool.push("sectarian");
 
     // Fill with villagers
     const remaining = c.playerCount - pool.length;
@@ -193,6 +240,8 @@ export class WebGameSession {
       "doctor",
       "fox",
       "raven",
+      "rusty_sword_knight",
+      "necromancer",
     ];
     const shuffled = [...villageRoles].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 3);
@@ -261,6 +310,7 @@ export class WebGameSession {
     if (!player || !player.isAlive) return [];
 
     const newAnnouncements: GameAnnouncement[] = [];
+    const wasWolfRole = isWolf(player.roleKey);
 
     // Hackeur target — mask role
     const isHackTarget = player.id === this.hackeurTargetId && !this.hackeurHasStolen;
@@ -269,6 +319,23 @@ export class WebGameSession {
     }
 
     player.isAlive = false;
+
+    if (wasWolfRole) this.wolfEverDied = true;
+
+    if (this.wildChildModelId === playerId) {
+      const wc = this.getPlayerByRole("wild_child");
+      if (wc?.isAlive) {
+        wc.roleKey = "werewolf";
+        wc.camp = "wolves";
+        newAnnouncements.push(
+          this.makeAnnouncement("system", {
+            type: "system",
+            message: `🌿 **${wc.username}** (Enfant sauvage) perd son modèle et **rejoint la meute** !`,
+            data: { playerId: wc.id },
+          })
+        );
+      }
+    }
 
     // Announce death
     newAnnouncements.push(this.makeAnnouncement("death", {
@@ -317,6 +384,30 @@ export class WebGameSession {
       (p) => !isWolf(p.roleKey) && p.camp !== "solo"
     );
     const aliveWhiteWolf = alive.find((p) => p.roleKey === "white_wolf");
+    const piper = alive.find((p) => p.roleKey === "pied_piper");
+    if (
+      piper &&
+      alive.length > 1 &&
+      alive.filter((p) => p.id !== piper.id).every((p) => this.enchantedPlayerIds.has(p.id))
+    ) {
+      return { winner: "solo", winnerIds: [piper.id] };
+    }
+
+    const pyro = alive.find((p) => p.roleKey === "pyromaniac");
+    if (pyro && alive.length === 1) {
+      return { winner: "solo", winnerIds: [pyro.id] };
+    }
+
+    const sect = alive.find((p) => p.roleKey === "sectarian");
+    if (sect && this.sectPlayerGroup.size > 0) {
+      const g = this.sectPlayerGroup.get(sect.id);
+      if (
+        g &&
+        alive.every((p) => this.sectPlayerGroup.get(p.id) === g)
+      ) {
+        return { winner: "solo", winnerIds: [sect.id] };
+      }
+    }
 
     // White wolf wins alone
     if (aliveWhiteWolf && alive.length === 1) {
@@ -420,8 +511,18 @@ export class WebGameSession {
           target.isProtected = false;
 
           if (!isProtected) {
-            // Elder check
-            if (target.roleKey === "elder" && !target.elderHit) {
+            const hunter = this.getPlayerByRole("hunter");
+            if (
+              target.roleKey === "red_riding_hood" &&
+              hunter &&
+              hunter.isAlive
+            ) {
+              this.announcements.push(this.makeAnnouncement("system", {
+                type: "system",
+                message: `🧣 Les loups ne peuvent pas dévorer **${target.username}** : le Chasseur veille sur le Chaperon rouge !`,
+                data: {},
+              }));
+            } else if (target.roleKey === "elder" && !target.elderHit) {
               target.elderHit = true;
               this.announcements.push(this.makeAnnouncement("system", {
                 type: "system",
@@ -430,7 +531,60 @@ export class WebGameSession {
               }));
             } else {
               killed.push(wolfTarget);
+              if (target.roleKey === "rusty_sword_knight") {
+                const wolfVoters = [...this.wolvesVotes.keys()]
+                  .filter((id) => {
+                    const v = this.players.get(id);
+                    return v && isWolf(v.roleKey) && v.roleKey !== "white_wolf";
+                  })
+                  .sort();
+                const infector = this.getPlayerByRole("infected_wolf");
+                const bbw = this.getPlayerByRole("big_bad_wolf");
+                const candidates = wolfVoters.length
+                  ? wolfVoters
+                  : [infector?.id, bbw?.id].filter(Boolean) as string[];
+                if (candidates[0]) this.rustySwordNextDawnWolfId = candidates[0];
+              }
             }
+          }
+        }
+      }
+    }
+
+    // Grand méchant loup : seconde victime tant qu’aucun loup n’est mort
+    if (
+      this.bbwNightTargetId &&
+      !this.wolfEverDied &&
+      this.getPlayerByRole("big_bad_wolf")?.isAlive
+    ) {
+      const bbwT = this.players.get(this.bbwNightTargetId);
+      if (
+        bbwT &&
+        bbwT.isAlive &&
+        !killed.includes(this.bbwNightTargetId) &&
+        this.bbwNightTargetId !== this.nightHeal
+      ) {
+        if (!bbwT.isProtected) {
+          const hunter = this.getPlayerByRole("hunter");
+          if (
+            bbwT.roleKey === "red_riding_hood" &&
+            hunter &&
+            hunter.isAlive
+          ) {
+            this.announcements.push(this.makeAnnouncement("system", {
+              type: "system",
+              message: `🧣 Le Grand méchant loup ne peut pas atteindre **${bbwT.username}** (protection du Chasseur).`,
+              data: {},
+            }));
+          } else if (bbwT.roleKey === "elder" && !bbwT.elderHit) {
+            bbwT.elderHit = true;
+            this.announcements.push(this.makeAnnouncement("system", {
+              type: "system",
+              message: `👴 L'Ancien résiste aussi au Grand méchant loup !`,
+              data: {},
+            }));
+          } else if (!killed.includes(this.bbwNightTargetId)) {
+            killed.push(this.bbwNightTargetId);
           }
         }
       }
@@ -444,11 +598,20 @@ export class WebGameSession {
       killed.push(witchKillAction.targetId);
     }
 
+    if (this.pyromaniacIgnited) {
+      for (const id of [...this.pyroDousedIds]) {
+        const p = this.players.get(id);
+        if (p?.isAlive && !killed.includes(id)) killed.push(id);
+      }
+    }
+
     // Reset night state
     this.nightHeal = null;
     this.infectThisNight = false;
     this.infectVictimId = null;
     this.ravenTarget = null;
+    this.bbwNightTargetId = null;
+    this.pyromaniacIgnited = false;
     for (const [, p] of this.players) p.isProtected = false;
 
     return killed;

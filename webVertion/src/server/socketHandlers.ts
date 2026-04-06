@@ -22,6 +22,7 @@ import {
   emitRoomState,
 } from "./game/gameEngine";
 import { randomUUID } from "crypto";
+import { normalizeCompositionConfig } from "@/lib/game/normalizeComposition";
 
 type IO = SocketIOServer<ClientToServerEvents, ServerToClientEvents>;
 type Sock = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -61,22 +62,49 @@ export function registerSocketHandlers(io: IO): void {
 
     // ─── Room: Create ────────────────────────────────────────────────────
     socket.on("room:create", (data, cb) => {
+      const reply = (r: { ok: boolean; code?: string; error?: string }) => {
+        if (typeof cb === "function") cb(r);
+      };
       try {
+        if (!data || typeof data !== "object") {
+          reply({ ok: false, error: "Données de création invalides." });
+          return;
+        }
+
+        const alreadyIn = getUserRoom(userId);
+        if (alreadyIn && alreadyIn.session.phase !== "lobby") {
+          reply({
+            ok: false,
+            error:
+              "Tu es déjà dans une partie en cours. Quitte la salle ou attends la fin avant d’en créer une nouvelle.",
+          });
+          return;
+        }
+
+        const prevRoomId = leaveRoom(userId);
+        if (prevRoomId) {
+          socket.leave(prevRoomId);
+          io.to(prevRoomId).emit("room:player_left", userId);
+          const prevEntry = getRoom(prevRoomId);
+          if (prevEntry) io.to(prevRoomId).emit("room:state", toRoomState(prevEntry));
+        }
+
+        const config = normalizeCompositionConfig(data.config);
         const { roomId, code } = createRoom(
           userId,
           username,
           avatar,
           data.name ?? null,
-          data.isPublic,
-          data.config
+          Boolean(data.isPublic),
+          config
         );
         socket.join(roomId);
-        cb({ ok: true, code });
+        reply({ ok: true, code });
 
         const entry = getRoom(roomId);
         if (entry) socket.emit("room:state", toRoomState(entry));
       } catch (err) {
-        cb({ ok: false, error: String(err) });
+        reply({ ok: false, error: String(err) });
       }
     });
 

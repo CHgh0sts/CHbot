@@ -26,6 +26,12 @@ const SUB_PHASE_LABELS: Record<NightSubPhase, string> = {
   infected: "🧟 Infectez ou laissez mourir",
   actor: "🎭 Choisissez un rôle à jouer",
   bear: "🐻 (passif)",
+  thief: "🥷 Choisissez qui voler",
+  wild_child: "🌿 Choisissez votre modèle",
+  big_bad_wolf: "🐺 Seconde victime (GML)",
+  pied_piper: "🎵 Ensorcellez 2 joueurs",
+  pyromaniac: "🔥 Arrosez ou déclenchez l'incendie",
+  sectarian: "☠️ Inspectez un joueur (groupe A/B)",
 };
 
 const SUB_PHASE_COLORS: Record<NightSubPhase, string> = {
@@ -43,18 +49,28 @@ const SUB_PHASE_COLORS: Record<NightSubPhase, string> = {
   infected: "#dc2626",
   actor: "#e879f9",
   bear: "#92400e",
+  thief: "#64748b",
+  wild_child: "#65a30d",
+  big_bad_wolf: "#991b1b",
+  pied_piper: "#7c3aed",
+  pyromaniac: "#ea580c",
+  sectarian: "#581c87",
 };
 
 export function ActionSidebar({ submitAction, myId }: Props) {
   const { myTurn, myTurnTimeout, room, myInfo } = useGameStore();
   const [selected, setSelected] = useState<string[]>([]);
   const [witchChoice, setWitchChoice] = useState<"heal" | "kill" | "pass" | null>(null);
+  const [pyroChoice, setPyroChoice] = useState<"douse" | "ignite" | null>(null);
+  const [dogCampChoice, setDogCampChoice] = useState<"wolves" | "village" | null>(null);
   const [timeLeft, setTimeLeft] = useState(myTurnTimeout);
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     setSelected([]);
     setWitchChoice(null);
+    setPyroChoice(null);
+    setDogCampChoice(null);
     setSubmitted(false);
     setTimeLeft(myTurnTimeout);
   }, [myTurn, myTurnTimeout]);
@@ -80,7 +96,7 @@ export function ActionSidebar({ submitAction, myId }: Props) {
   const color = SUB_PHASE_COLORS[myTurn] ?? "#7c3aed";
 
   const toggleSelect = (id: string) => {
-    if (myTurn === "cupid") {
+    if (myTurn === "cupid" || myTurn === "pied_piper") {
       setSelected((prev) =>
         prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 2 ? [...prev, id] : prev
       );
@@ -110,6 +126,26 @@ export function ActionSidebar({ submitAction, myId }: Props) {
           choice: witchChoice === "heal" ? "infect" : "pass",
           targetId: selected[0],
         };
+        break;
+      case "pied_piper":
+        if (selected.length !== 2) return;
+        action = { subPhase: myTurn, targetIds: selected };
+        break;
+      case "pyromaniac":
+        if (pyroChoice === "ignite") {
+          action = { subPhase: myTurn, choice: "ignite" };
+        } else {
+          if (!selected[0]) return;
+          action = { subPhase: myTurn, targetId: selected[0] };
+        }
+        break;
+      case "hackeur":
+        if (myInfo?.roleKey === "dog_wolf") {
+          if (!dogCampChoice) return;
+          action = { subPhase: myTurn, choice: dogCampChoice };
+        } else {
+          action = { subPhase: myTurn, targetId: selected[0] };
+        }
         break;
       default:
         action = { subPhase: myTurn, targetId: selected[0] };
@@ -198,6 +234,52 @@ export function ActionSidebar({ submitAction, myId }: Props) {
           </div>
         )}
 
+        {/* Chien-loup — même créneau que Hackeur nuit 1 */}
+        {myTurn === "hackeur" && myInfo?.roleKey === "dog_wolf" && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-400 mb-1">Choisissez votre camp pour toute la partie :</p>
+            {[
+              { key: "village" as const, label: "🏡 Village" },
+              { key: "wolves" as const, label: "🐺 Meute (Loups)" },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setDogCampChoice(opt.key)}
+                className={`p-3 rounded-lg border text-sm text-left transition-all ${
+                  dogCampChoice === opt.key
+                    ? "border-orange-500 bg-orange-500/10 text-orange-200"
+                    : "border-[var(--border)] text-gray-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Pyromane */}
+        {myTurn === "pyromaniac" && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-400 mb-1">Arroser un joueur ou déclencher l&apos;incendie ?</p>
+            {[
+              { key: "douse" as const, label: "🛢️ Arroser (choisissez une cible ci-dessous)" },
+              { key: "ignite" as const, label: "🔥 Déclencher l&apos;incendie (tous les arrosés meurent)" },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setPyroChoice(opt.key)}
+                className={`p-3 rounded-lg border text-sm text-left transition-all ${
+                  pyroChoice === opt.key
+                    ? "border-orange-600 bg-orange-600/10 text-orange-200"
+                    : "border-[var(--border)] text-gray-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Infected special UI */}
         {myTurn === "infected" && (
           <div className="flex flex-col gap-2">
@@ -222,9 +304,16 @@ export function ActionSidebar({ submitAction, myId }: Props) {
         )}
 
         {/* Target selection */}
-        {myTurn !== "witch" || witchChoice === "kill" ? (
+        {(() => {
+          const showTargets =
+            (myTurn !== "witch" || witchChoice === "kill") &&
+            myTurn !== "necromancer" &&
+            !(myTurn === "pyromaniac" && pyroChoice === "ignite") &&
+            !(myTurn === "hackeur" && myInfo?.roleKey === "dog_wolf");
+          return showTargets;
+        })() ? (
           <div className="flex flex-col gap-2">
-            {myTurn === "cupid" && (
+            {(myTurn === "cupid" || myTurn === "pied_piper") && (
               <p className="text-xs text-gray-500">
                 Sélectionnez 2 joueurs ({selected.length}/2)
               </p>
@@ -261,16 +350,24 @@ export function ActionSidebar({ submitAction, myId }: Props) {
           className="w-full"
           style={{ backgroundColor: color, color: "#000" }}
           onClick={handleSubmit}
-          disabled={
-            (myTurn === "cupid" && selected.length !== 2) ||
-            (myTurn === "witch" && witchChoice === null) ||
-            (myTurn === "infected" && witchChoice === null) ||
-            (myTurn !== "witch" &&
-              myTurn !== "infected" &&
-              myTurn !== "cupid" &&
-              myTurn !== "necromancer" &&
-              selected.length === 0)
-          }
+          disabled={(() => {
+            if (myTurn === "cupid" || myTurn === "pied_piper")
+              return selected.length !== 2;
+            if (myTurn === "witch")
+              return witchChoice === null || (witchChoice === "kill" && !selected[0]);
+            if (myTurn === "infected")
+              return witchChoice === null || !selected[0];
+            if (myTurn === "necromancer") return false;
+            if (myTurn === "pyromaniac")
+              return (
+                pyroChoice === null ||
+                (pyroChoice === "douse" && !selected[0])
+              );
+            if (myTurn === "hackeur" && myInfo?.roleKey === "dog_wolf")
+              return dogCampChoice === null;
+            if (myTurn === "hackeur") return !selected[0];
+            return !selected[0];
+          })()}
         >
           Confirmer
         </Button>

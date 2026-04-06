@@ -30,6 +30,12 @@ export function PhaseBanner() {
     infected: "🧟 L'Infect Père choisit",
     actor: "🎭 L'Acteur joue un rôle",
     bear: "🐻 L'Ours fait le tour",
+    thief: "🥷 Le Voleur agit",
+    wild_child: "🌿 L'Enfant sauvage choisit son modèle",
+    big_bad_wolf: "🐺 Le Grand méchant loup frappe",
+    pied_piper: "🎵 Le Joueur de flûte ensorcelle",
+    pyromaniac: "🔥 Le Pyromane prépare son feu",
+    sectarian: "☠️ Le Sectaire inspecte",
   };
 
   return (

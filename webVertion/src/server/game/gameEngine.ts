@@ -41,7 +41,54 @@ export async function startGame(io: IO, session: WebGameSession): Promise<void> 
   });
   io.to(session.roomId).emit("game:announcement", msg);
 
+  announceFamilyRoles(io, session);
+
   await runNightPhase(io, session);
+}
+
+function announceFamilyRoles(io: IO, session: WebGameSession): void {
+  const sisters = session.getPlayersByRole("two_sisters").filter((p) => p.isAlive);
+  if (sisters.length >= 2) {
+    const list = sisters.map((s) => s.username).join(", ");
+    for (const s of sisters) {
+      io.to(s.id).emit(
+        "game:announcement",
+        session.makeAnnouncement("system", {
+          type: "system",
+          message: `👯 Vos sœurs dans la partie : **${list}**. Vous gagnez avec le village.`,
+          data: {},
+        })
+      );
+    }
+  }
+  const bros = session.getPlayersByRole("three_brothers").filter((p) => p.isAlive);
+  if (bros.length >= 2) {
+    const list = bros.map((b) => b.username).join(", ");
+    for (const b of bros) {
+      io.to(b.id).emit(
+        "game:announcement",
+        session.makeAnnouncement("system", {
+          type: "system",
+          message: `👨‍👦‍👦 Vos frères dans la partie : **${list}**. Vous gagnez avec le village.`,
+          data: {},
+        })
+      );
+    }
+  }
+  if (session.config.includeSectarian) {
+    const sect = session.getPlayerByRole("sectarian");
+    if (sect) {
+      const g = session.sectPlayerGroup.get(sect.id) ?? "?";
+      io.to(sect.id).emit(
+        "game:announcement",
+        session.makeAnnouncement("system", {
+          type: "system",
+          message: `☠️ Vous êtes le Sectaire abominable. Votre groupe secret est **${g}**. Inspectez chaque nuit pour repérer les autres.`,
+          data: {},
+        })
+      );
+    }
+  }
 }
 
 // ─── Night Phase ──────────────────────────────────────────────────────────────
@@ -51,7 +98,7 @@ async function runNightPhase(io: IO, session: WebGameSession): Promise<void> {
   session.wolvesVotes.clear();
   session.nightHeal = null;
 
-  const subPhases = buildNightOrder(session);
+  const subPhases = buildNightOrderProper(session);
 
   for (const subPhase of subPhases) {
     await runSubPhase(io, session, subPhase);
@@ -104,59 +151,35 @@ async function runNightPhase(io: IO, session: WebGameSession): Promise<void> {
 
 // ─── Night Sub-Phases ────────────────────────────────────────────────────────
 
-function buildNightOrder(session: WebGameSession): NightSubPhase[] {
-  const order: NightSubPhase[] = [];
-
-  if (session.round === 1 && session.config.includeCupid) order.push("cupid");
-  if (session.round === 1 && session.config.includeHackeur) order.push("hackeur");
-  if (session.config.includeDogWolf && session.round === 1) order.push("hackeur"); // dog wolf uses "hackeur" slot temporarily
-
-  // Always: werewolves
-  order.push("werewolves");
-
-  // Optional
-  if (session.round === 1 && session.config.includeDogWolf)
-    order.splice(order.indexOf("werewolves"), 0, "hackeur"); // placeholder
-
-  if (session.config.includeGuard) order.push("guard");
-  if (session.config.includeSeer) order.push("seer");
-  if (session.config.includeDoctor) order.push("doctor");
-  if (session.config.includeWitch) order.push("witch");
-  if (session.config.includeFox) order.push("fox");
-  if (session.config.includeNecromancer) order.push("necromancer");
-  if (session.config.includeRaven) order.push("raven");
-  if (session.config.includeWhiteWolf && session.round % 2 === 0)
-    order.push("white_wolf");
-  if (session.config.includeActor) order.push("actor");
-
-  return buildNightOrderProper(session);
-}
-
 function buildNightOrderProper(session: WebGameSession): NightSubPhase[] {
   const order: NightSubPhase[] = [];
   const c = session.config;
+  const r1 = session.round === 1;
 
-  if (session.round === 1 && c.includeCupid) order.push("cupid");
-  if (session.round === 1 && c.includeHackeur) order.push("hackeur");
-  if (session.round === 1 && c.includeDogWolf) order.push("hackeur"); // dog_wolf picks camp
+  if (r1 && c.includeCupid) order.push("cupid");
+  if (r1 && c.includeHackeur) order.push("hackeur");
+  if (r1 && c.includeDogWolf) order.push("hackeur");
+  if (r1 && c.includeThief) order.push("thief");
+  if (r1 && c.includeWildChild) order.push("wild_child");
 
-  // Remove duplicates
-  const unique = [...new Set(order)];
+  order.push("werewolves");
+  if (c.includeInfectedWolf) order.push("infected");
+  if (c.includeBigBadWolf && !session.wolfEverDied) order.push("big_bad_wolf");
+  if (c.includeGuard) order.push("guard");
+  if (c.includeSeer) order.push("seer");
+  if (c.includeDoctor) order.push("doctor");
+  if (c.includeWitch) order.push("witch");
+  if (c.includeFox) order.push("fox");
+  if (c.includeNecromancer) order.push("necromancer");
+  if (c.includeRaven) order.push("raven");
+  if (c.includeWhiteWolf && session.round % 2 === 0) order.push("white_wolf");
+  if (c.includeActor) order.push("actor");
+  if (c.includeBearTamer) order.push("bear");
+  if (c.includePiedPiper) order.push("pied_piper");
+  if (c.includePyromaniac) order.push("pyromaniac");
+  if (c.includeSectarian) order.push("sectarian");
 
-  unique.push("werewolves");
-  if (c.includeInfectedWolf) unique.push("infected");
-  if (c.includeGuard) unique.push("guard");
-  if (c.includeSeer) unique.push("seer");
-  if (c.includeDoctor) unique.push("doctor");
-  if (c.includeWitch) unique.push("witch");
-  if (c.includeFox) unique.push("fox");
-  if (c.includeNecromancer) unique.push("necromancer");
-  if (c.includeRaven) unique.push("raven");
-  if (c.includeWhiteWolf && session.round % 2 === 0) unique.push("white_wolf");
-  if (c.includeActor) unique.push("actor");
-  if (c.includeBearTamer) unique.push("bear");
-
-  return unique;
+  return [...new Set(order)];
 }
 
 async function runSubPhase(
@@ -203,8 +226,45 @@ function getActorsForSubPhase(
       return alive.filter((p) => p.roleKey === "guard").map((p) => p.id);
     case "cupid":
       return alive.filter((p) => p.roleKey === "cupid" && !session.cupidDone).map((p) => p.id);
-    case "hackeur":
-      return alive.filter((p) => p.roleKey === "hackeur" && !session.hackeurTargetId).map((p) => p.id);
+    case "hackeur": {
+      const ids: string[] = [];
+      if (session.round === 1 && session.config.includeDogWolf) {
+        ids.push(
+          ...alive
+            .filter((p) => p.roleKey === "dog_wolf" && !p.dogWolfChose)
+            .map((p) => p.id)
+        );
+      }
+      ids.push(
+        ...alive
+          .filter((p) => p.roleKey === "hackeur" && !session.hackeurTargetId)
+          .map((p) => p.id)
+      );
+      return ids;
+    }
+    case "thief":
+      return alive
+        .filter((p) => p.roleKey === "thief" && !session.thiefNightDone)
+        .map((p) => p.id);
+    case "wild_child":
+      return alive
+        .filter((p) => p.roleKey === "wild_child" && !session.wildChildModelId)
+        .map((p) => p.id);
+    case "big_bad_wolf":
+      return alive
+        .filter(
+          (p) =>
+            p.roleKey === "big_bad_wolf" &&
+            p.isAlive &&
+            !session.wolfEverDied
+        )
+        .map((p) => p.id);
+    case "pied_piper":
+      return alive.filter((p) => p.roleKey === "pied_piper").map((p) => p.id);
+    case "pyromaniac":
+      return alive.filter((p) => p.roleKey === "pyromaniac").map((p) => p.id);
+    case "sectarian":
+      return alive.filter((p) => p.roleKey === "sectarian").map((p) => p.id);
     case "fox":
       return alive.filter((p) => p.roleKey === "fox").map((p) => p.id);
     case "raven":
@@ -356,7 +416,11 @@ export function processNightAction(
       break;
 
     case "hackeur":
-      if (action.targetId && !session.hackeurTargetId) {
+      if (
+        player.roleKey === "hackeur" &&
+        action.targetId &&
+        !session.hackeurTargetId
+      ) {
         session.hackeurTargetId = action.targetId;
         const target = session.players.get(action.targetId);
         io.to(playerId).emit(
@@ -365,6 +429,32 @@ export function processNightAction(
             type: "system",
             message: `💻 Vous avez ciblé **${target?.username ?? "?"}**. Quand il mourra, vous héritez de son rôle.`,
             data: { targetId: action.targetId },
+          })
+        );
+      }
+      if (
+        player.roleKey === "dog_wolf" &&
+        session.round === 1 &&
+        !player.dogWolfChose &&
+        (action.choice === "wolves" || action.choice === "village")
+      ) {
+        player.dogWolfChose = true;
+        const side = action.choice === "wolves" ? "wolves" : "village";
+        if (side === "wolves") {
+          player.camp = "wolves";
+        } else {
+          player.roleKey = "villager";
+          player.camp = "village";
+        }
+        io.to(playerId).emit(
+          "game:announcement",
+          session.makeAnnouncement("system", {
+            type: "system",
+            message:
+              side === "wolves"
+                ? `🐕 Vous rejoignez secrètement la **meute**.`
+                : `🐕 Vous restez du côté du **village**.`,
+            data: {},
           })
         );
       }
@@ -395,6 +485,129 @@ export function processNightAction(
         }
       }
       break;
+
+    case "thief":
+      if (action.targetId && !session.thiefNightDone && player.roleKey === "thief") {
+        const tgt = session.players.get(action.targetId);
+        if (tgt?.isAlive) {
+          const stolen = tgt.roleKey;
+          tgt.roleKey = "villager";
+          tgt.camp = "village";
+          player.roleKey = stolen;
+          player.camp = ROLES[stolen].camp;
+          session.thiefNightDone = true;
+          io.to(playerId).emit(
+            "game:announcement",
+            session.makeAnnouncement("system", {
+              type: "system",
+              message: `🥷 Vous prenez le rôle **${ROLES[stolen].name}**.`,
+              data: {},
+            })
+          );
+          io.to(action.targetId).emit(
+            "game:announcement",
+            session.makeAnnouncement("system", {
+              type: "system",
+              message: `🥷 Le Voleur a échangé avec vous : vous êtes maintenant **Villageois**.`,
+              data: {},
+            })
+          );
+        }
+      }
+      break;
+
+    case "wild_child":
+      if (
+        action.targetId &&
+        !session.wildChildModelId &&
+        player.roleKey === "wild_child"
+      ) {
+        session.wildChildModelId = action.targetId;
+        const t = session.players.get(action.targetId);
+        io.to(playerId).emit(
+          "game:announcement",
+          session.makeAnnouncement("system", {
+            type: "system",
+            message: `🌿 Votre modèle est **${t?.username ?? "?"}**. S'il meurt, vous deviendrez Loup-Garou.`,
+            data: {},
+          })
+        );
+      }
+      break;
+
+    case "big_bad_wolf":
+      if (action.targetId && player.roleKey === "big_bad_wolf") {
+        session.bbwNightTargetId = action.targetId;
+        const t = session.players.get(action.targetId);
+        io.to(playerId).emit(
+          "game:announcement",
+          session.makeAnnouncement("system", {
+            type: "system",
+            message: `🐺 Seconde victime choisie : **${t?.username ?? "?"}**.`,
+            data: {},
+          })
+        );
+      }
+      break;
+
+    case "pied_piper":
+      if (action.targetIds && player.roleKey === "pied_piper") {
+        for (const tid of action.targetIds.slice(0, 2)) {
+          if (tid !== playerId) session.enchantedPlayerIds.add(tid);
+        }
+        io.to(playerId).emit(
+          "game:announcement",
+          session.makeAnnouncement("system", {
+            type: "system",
+            message: `🎵 Joueur(s) ensorcelé(s) cette nuit.`,
+            data: {},
+          })
+        );
+      }
+      break;
+
+    case "pyromaniac":
+      if (player.roleKey === "pyromaniac") {
+        if (action.choice === "ignite") {
+          session.pyromaniacIgnited = true;
+          io.to(playerId).emit(
+            "game:announcement",
+            session.makeAnnouncement("system", {
+              type: "system",
+              message: `🔥 Vous déclenchez l'incendie !`,
+              data: {},
+            })
+          );
+        } else if (action.targetId) {
+          session.pyroDousedIds.add(action.targetId);
+          io.to(playerId).emit(
+            "game:announcement",
+            session.makeAnnouncement("system", {
+              type: "system",
+              message: `🔥 Cible arrosée d'essence.`,
+              data: {},
+            })
+          );
+        }
+      }
+      break;
+
+    case "sectarian":
+      if (action.targetId && player.roleKey === "sectarian") {
+        const tg = session.sectPlayerGroup.get(action.targetId);
+        const me = session.sectPlayerGroup.get(playerId);
+        const t = session.players.get(action.targetId);
+        const same = me && tg && me === tg;
+        io.to(playerId).emit(
+          "game:announcement",
+          session.makeAnnouncement("role_reveal", {
+            type: "role_reveal",
+            message: `☠️ **${t?.username ?? "?"}** — groupe **${tg ?? "?"}** (${same ? "même groupe que vous" : "autre groupe"}).`,
+            data: {},
+          })
+        );
+      }
+      break;
   }
 }
 
@@ -412,6 +625,24 @@ async function runDayPhase(io: IO, session: WebGameSession): Promise<void> {
   });
   io.to(session.roomId).emit("game:announcement", dayMsg);
   io.to(session.roomId).emit("game:day_phase", session.round);
+
+  if (session.rustySwordNextDawnWolfId) {
+    const wid = session.rustySwordNextDawnWolfId;
+    session.rustySwordNextDawnWolfId = null;
+    const infected = session.players.get(wid);
+    if (infected?.isAlive) {
+      io.to(session.roomId).emit(
+        "game:announcement",
+        session.makeAnnouncement("system", {
+          type: "system",
+          message: `⚔️ L'épée rouillée du Chevalier infecte **${infected.username}** !`,
+          data: {},
+        })
+      );
+      const anns = session.kill(wid);
+      for (const ann of anns) io.to(session.roomId).emit("game:announcement", ann);
+    }
+  }
 
   // Bear tamer check
   const bearTamer = session.getPlayerByRole("bear_tamer");

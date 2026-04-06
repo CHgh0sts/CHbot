@@ -24,7 +24,17 @@ export type RoleKey =
   | "guard"
   | "actor"
   | "dictateur"
-  | "hackeur";
+  | "hackeur"
+  | "thief"
+  | "red_riding_hood"
+  | "big_bad_wolf"
+  | "pied_piper"
+  | "rusty_sword_knight"
+  | "wild_child"
+  | "pyromaniac"
+  | "two_sisters"
+  | "three_brothers"
+  | "sectarian";
 
 export type Camp = "village" | "wolves" | "solo";
 
@@ -44,7 +54,13 @@ export type NightSubPhase =
   | "raven"
   | "white_wolf"
   | "actor"
-  | "bear";
+  | "bear"
+  | "thief"
+  | "wild_child"
+  | "big_bad_wolf"
+  | "pied_piper"
+  | "pyromaniac"
+  | "sectarian";
 
 // ─── Role Definition ─────────────────────────────────────────────────────────
 
@@ -54,6 +70,7 @@ export interface RoleDef {
   camp: Camp;
   icon: string;
   color: string;
+  image?: string;
   description: string;
   nightOrder?: number;
   hasNightAction: boolean;
@@ -152,6 +169,16 @@ export interface CompositionConfig {
   includeActor: boolean;
   includeDictateur: boolean;
   includeHackeur: boolean;
+  includeThief: boolean;
+  includeRedRidingHood: boolean;
+  includeBigBadWolf: boolean;
+  includePiedPiper: boolean;
+  includeRustySwordKnight: boolean;
+  includeWildChild: boolean;
+  includePyromaniac: boolean;
+  includeTwoSisters: boolean;
+  includeThreeBrothers: boolean;
+  includeSectarian: boolean;
 }
 
 export const DEFAULT_CONFIG: CompositionConfig = {
@@ -180,6 +207,16 @@ export const DEFAULT_CONFIG: CompositionConfig = {
   includeActor: false,
   includeDictateur: false,
   includeHackeur: false,
+  includeThief: false,
+  includeRedRidingHood: false,
+  includeBigBadWolf: false,
+  includePiedPiper: false,
+  includeRustySwordKnight: false,
+  includeWildChild: false,
+  includePyromaniac: false,
+  includeTwoSisters: false,
+  includeThreeBrothers: false,
+  includeSectarian: false,
 };
 
 // ─── Socket Events ────────────────────────────────────────────────────────────
